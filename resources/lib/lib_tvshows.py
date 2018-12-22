@@ -148,7 +148,7 @@ def setup_library(library_folder):
 			try:
 				source_thumbnail = nav_base.get_icon_path('tv')
 				source_name = 'OpenMeta TV shows'
-				source_content = "('%s','tvshows','metadata.tvdb.com','',0,0,'<settings><setting id=\"RatingS\" value=\"TheTVDB\" /><setting id=\"absolutenumber\" value=\"false\" /><setting id=\"alsoimdb\" value=\"false\" /><setting id=\"dvdorder\" value=\"false\" /><setting id=\"fallback\" value=\"true\" /><setting id=\"fallbacklanguage\" value=\"en\" /><setting id=\"fanart\" value=\"true\" /><setting id=\"language\" value=\"en\" /><setting id=\"usefallbacklanguage1\" value=\"false\" /></settings>',0,0,NULL,NULL)" % library_folder
+				source_content = "('%s','tvshows','metadata.tvdb.com','',0,0,'<settings version=\"2\"><setting id=\"absolutenumber\" default=\"true\">false</setting><setting id=\"alsoimdb\">true</setting><setting id=\"dvdorder\" default=\"true\">false</setting><setting id=\"fallback\">true</setting><setting id=\"fallbacklanguage\">es</setting><setting id=\"fanart\">true</setting><setting id=\"language\" default=\"true\">en</setting><setting id=\"RatingS\" default=\"true\">TheTVDB</setting><setting id=\"usefallbacklanguage1\">true</setting></settings>',0,0,NULL,NULL)" % library_folder
 				tools.add_source(source_name, library_folder, source_content, source_thumbnail)
 			except:
 				pass
@@ -160,7 +160,7 @@ def auto_tvshows_setup(library_folder):
 		xbmcvfs.mkdir(library_folder)
 		source_thumbnail = nav_base.get_icon_path('tv')
 		source_name = 'OpenMeta TV shows'
-		source_content = "('%s','tvshows','metadata.tvdb.com','',0,0,'<settings><setting id=\"RatingS\" value=\"TheTVDB\" /><setting id=\"absolutenumber\" value=\"false\" /><setting id=\"alsoimdb\" value=\"false\" /><setting id=\"dvdorder\" value=\"false\" /><setting id=\"fallback\" value=\"true\" /><setting id=\"fallbacklanguage\" value=\"en\" /><setting id=\"fanart\" value=\"true\" /><setting id=\"language\" value=\"en\" /><setting id=\"usefallbacklanguage1\" value=\"false\" /></settings>',0,0,NULL,NULL)" % library_folder
+		source_content = "('%s','tvshows','metadata.tvdb.com','',0,0,'<settings version=\"2\"><setting id=\"absolutenumber\" default=\"true\">false</setting><setting id=\"alsoimdb\">true</setting><setting id=\"dvdorder\" default=\"true\">false</setting><setting id=\"fallback\">true</setting><setting id=\"fallbacklanguage\">es</setting><setting id=\"fanart\">true</setting><setting id=\"language\" default=\"true\">en</setting><setting id=\"RatingS\" default=\"true\">TheTVDB</setting><setting id=\"usefallbacklanguage1\">true</setting></settings>',0,0,NULL,NULL)" % library_folder
 		tools.add_source(source_name, library_folder, source_content, source_thumbnail)
 		return True
 	except:

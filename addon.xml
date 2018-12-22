@@ -1,7 +1,8 @@
 ﻿<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="plugin.video.openmeta" name="OpenMeta" version="1.0.0" provider-name="A4K">
+<addon id="plugin.video.openmeta" name="OpenMeta" version="1.0.1" provider-name="A4K">
 	<requires>
 		<import addon="xbmc.python" version="2.25.0"/>
+		<import addon="metadata.tvdb.com" version="3.0.14"/>
 		<import addon="script.module.futures" version="2.2.0"/>
 		<import addon="script.module.requests" version="2.19.1"/>
 		<import addon="script.module.requests-cache" version="0.4.13"/>
@@ -30,5 +31,6 @@
 			<screenshot>resources/screenshot001.jpg</screenshot>
 			<screenshot>resources/screenshot002.jpg</screenshot>
 		</assets>
+		<news>Added fallback for absolute episode number param.[CR]Added ordinal season param.[CR]Added metadata.tvdb.com as dependency.[CR]Added multi-player checking.[CR]Filter out largest common substring for multiple matches.[CR]Updated source creation.</news>
 	</extension>
 </addon>

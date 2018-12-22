@@ -7,6 +7,9 @@ from resources.lib import play_base
 from resources.lib import properties
 from resources.lib import meta_players
 
+NTH = {1: "first", 2: "second", 3: "third", 5: "fifth", 8: "eigth"}
+DCS = {2: "twenty", 3: "thirty", 4: "fourty", 5: "fifty", 6: "sixty"}
+
 def play_episode(id, season, episode):
 	from resources.lib.TheTVDB import TVDB
 	id = int(id)
@@ -376,9 +379,23 @@ def get_episode_parameters(show, season, episode):
 	else:
 		return
 	episodes = 0
+	count = 0
 	for i in show.items():
 		episodes += len(i[1].items())
+		if i[0] != 0 and i[0] < (season -1):
+			count += len(i[1].items())
+	# Get parameters
 	parameters = {'id': show['id'], 'season': season, 'episode': episode}
+	if season in NTH:
+		parameters['season_ordinal'] = NTH[season]
+	else:
+		if number_to_text(season) in (season, ''):
+			if int(str(season)[-1]) in NTH:
+				parameters['season_ordinal'] = "{}{}".format(DCD[int(str(season)[-2])],NTH[int(str(season)[-1])])
+			else:
+				parameters['season_ordinal'] = "{}{}th".format(DCD[int(str(season)[-2])],number_to_text(int(str(season)[-1])))
+		else:
+			parameters['season_ordinal'] = "{}th".format(number_to_text(season))
 	parameters['episodes'] = episodes
 	parameters['seasons'] = len(show.items())
 	parameters['seasons_no_specials'] = len([season_num for (season_num, season) in show.items() if season_num != 0])
@@ -397,16 +414,14 @@ def get_episode_parameters(show, season, episode):
 		if text.to_utf8(parameters['clearname']).startswith(article):
 			parameters['sortname'] = text.to_utf8(parameters['clearname']).replace(article,'')
 	parameters['urlname'] = urllib.quote(text.to_utf8(parameters['clearname']))
-	articles = ['a ', 'A ', 'An ', 'an ', 'The ', 'the ']
 	parameters['sortname'] = text.to_utf8(parameters['clearname'])
 	for article in articles:
-		if text.to_utf8(parameters['clearname']).startswith(article):
-			parameters['sortname'] = text.to_utf8(parameters['clearname']).replace(article,'')
+		if text.to_utf8(parameters['clearname']).startswith(article): parameters['sortname'] = text.to_utf8(parameters['clearname']).replace(article,'')
 	parameters['shortname'] = text.to_utf8(parameters['clearname'][1:-1])
 	try:
 		parameters['absolute_number'] = int(episode_obj.get('absolute_number'))
 	except:
-		parameters['absolute_number'] = 'na'
+		parameters['absolute_number'] = count + episode
 	parameters['title'] = episode_obj.get('episodename', str(episode)).replace('&', '%26')
 	parameters['urltitle'] = urllib.quote(text.to_utf8(parameters['title']))
 	parameters['sorttitle'] = text.to_utf8(parameters['title'])
@@ -436,7 +451,6 @@ def get_episode_parameters(show, season, episode):
 		parameters['plot'] = episode_obj.get('overview')
 	else:
 		parameters['plot'] = show['overview']
-	parameters['series_plot'] = show['overview']
 	if episode_obj.get('rating') not in (None, ''):
 		parameters['rating'] = episode_obj.get('rating')
 	elif show.get('rating') not in (None, ''):
@@ -451,10 +465,10 @@ def get_episode_parameters(show, season, episode):
 		parameters['votes'] = episode_obj.get('ratingcount')
 	else:
 		parameters['votes'] = show['ratingcount']
-	parameters['writers'] = episode_obj.get('Writer')
-	parameters['directors'] = episode_obj.get('Director')
+	parameters['writers'] = episode_obj.get('writer')
+	parameters['directors'] = episode_obj.get('director')
 	parameters['status'] = show.get('status')
-	parameters['mpaa'] = show.get('ContentRating')
+	parameters['mpaa'] = show.get('contentrating', '')
 	if show.get('actors') != None and show.get('actors') != '':
 		parameters['actors'] = re.sub(r'\<[^)].*?\>', '', show.get('actors'))
 	else:
@@ -465,16 +479,18 @@ def get_episode_parameters(show, season, episode):
 		parameters['genres'] = show.get('genre')
 	parameters['runtime'] = show['runtime']
 	parameters['duration'] = int(show['runtime']) * 60
-	tvdb_base = 'https://thetvdb.com/banners/'
-	if episode_obj.get('filename') != '':
-		parameters['thumbnail'] = tvdb_base + str(episode_obj.get('filename'))
-	elif show.get('poster') != '':
+	tvdb_base = "http://thetvdb.com/banners/"
+	if episode_obj.get('filename') not in ("", None):
+		parameters['thumbnail'] = str(episode_obj.get('filename'))
+	elif show.get('poster') not in ("", None):
 		parameters['thumbnail'] = show.get('poster')
-	if show.get('poster') != '' and show.get('poster') is not None:
+	else:
+		parameters['thumbnail'] = tvdb_base + 'episodes/' + str(show['id']) + '/' + str(parameters['epid']) + '.jpg'
+	if show.get('poster') not in ("", None):
 		parameters['poster'] = show.get('poster')
-	parameters['thumbnail'] = tvdb_base + 'episodes/' + str(show['id']) + '/' + str(parameters['epid']) + '.jpg'
+	else: parameters['poster'] = get_icon_path("metalliq")
 	parameters['banner'] = show.get('banner')
-	if show.get('fanart') != None and show.get('fanart') != '':
+	if show.get('fanart') not in ("", None):
 		parameters['fanart'] = show.get('fanart')
 	else:
 		parameters['fanart'] = get_background_path()
@@ -495,6 +511,8 @@ def get_episode_parameters(show, season, episode):
 			parameters['slug'] = trakt_ids['slug']
 		else:
 			parameters['slug'] = parameters['clearname'].lower().replace('~','').replace('#','').replace('%','').replace('&','').replace('*','').replace('{','').replace('}','').replace('\\','').replace(':','').replace('<','').replace('>','').replace('?','').replace('/','').replace('+','').replace('|','').replace('"','').replace(' ','-')
+	else:
+		parameters['slug'] = parameters['clearname'].lower().replace('~','').replace('#','').replace('%','').replace('&','').replace('*','').replace('{','').replace('}','').replace('\\','').replace(':','').replace('<','').replace('>','').replace('?','').replace('/','').replace('+','').replace('|','').replace('"','').replace(" ","-")
 	return parameters
 
 def get_tmdb_episode_parameters(show, preason, prepisode):

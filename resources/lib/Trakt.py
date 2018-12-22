@@ -48,22 +48,18 @@ def call_trakt(path, params = {}, data=None, is_delete=False, with_auth=True, pa
 		lists = []
 		params['page'] = page
 		results = send_query()
-		TITLE = 'Authenticate Trakt'
-		MSG = 'Do you want to authenticate with Trakt now?'
-		if with_auth and results.status_code == 401 and dialogs.yesno(TITLE, MSG) and trakt_authenticate():
+		title = 'Authenticate Trakt'
+		msg = 'Do you want to authenticate with Trakt now?'
+		if with_auth and results.status_code == 401 and dialogs.yesno(title, msg) and trakt_authenticate():
 			response = paginated_query(1)
 			return response
 		results.raise_for_status()
 		results.encoding = 'utf-8'
 		lists.extend(results.json())
 		return lists, results.headers['X-Pagination-Page-Count']
-
 	if pagination == False:
 		response = send_query()
-		TITLE = 'Authenticate Trakt'
-		MSG = 'Do you want to authenticate with Trakt now?'
-		if with_auth and response.status_code == 401 and dialogs.yesno(TITLE, MSG) and trakt_authenticate():
-			response = send_query()
+		if with_auth and response.status_code == 401 and dialogs.yesno(title, msg) and trakt_authenticate(): response = send_query()
 		response.raise_for_status()
 		response.encoding = 'utf-8'
 		return response.json()
@@ -98,9 +94,9 @@ def trakt_get_device_token(device_codes):
 	start = time.time()
 	expires_in = device_codes['expires_in']
 	progress_dialog = xbmcgui.DialogProgress()
-	TITLE = 'Authenticate Trakt'
-	MSG = 'Please go to  https://trakt.tv/activate  and enter the code'
-	progress_dialog.create(TITLE, MSG, str(device_codes['user_code']))
+	title = 'Authenticate Trakt'
+	msg = 'Please go to  https://trakt.tv/activate  and enter the code'
+	progress_dialog.create(title, msg, str(device_codes['user_code']))
 	try:
 		time_passed = 0
 		while not xbmc.abortRequested and not progress_dialog.iscanceled() and time_passed < expires_in:            
@@ -181,12 +177,6 @@ def trakt_get_calendar():
 	return call_trakt('calendars/my/shows', params)
 
 @plugin.cached(TTL=60, cache='Trakt')
-def trakt_get_netflix_collected_shows(page):
-	params = {'networks': 'Netflix', 'extended': 'full', 'limit': '20'}
-	result, pages = call_trakt('shows/collected/weekly?', params, pagination=True, page=page, with_auth=False)
-	return result, pages
-
-@plugin.cached(TTL=60, cache='Trakt')
 def trakt_get_next_episodes():
 	params = {'extended': 'noseasons,full'}
 	shows = call_trakt('sync/watched/shows', params)
@@ -218,55 +208,55 @@ def trakt_get_imdb_top_rated_movies(page):
 @plugin.cached(TTL=60, cache='Trakt')
 def trakt_get_trending_shows_paginated(page):
 	params = {'extended': 'full', 'limit': '20'}
-	result, pages = call_trakt('shows/trending?', params, pagination=True, page=page, with_auth=False)
+	result, pages = call_trakt('shows/trending', params, pagination=True, page=page, with_auth=False)
 	return result, pages
 
 @plugin.cached(TTL=60, cache='Trakt')
 def trakt_get_popular_shows_paginated(page):
 	params = {'extended': 'full', 'limit': '20'}
-	result, pages = call_trakt('shows/popular?', params, pagination=True, page=page, with_auth=False)
+	result, pages = call_trakt('shows/popular', params, pagination=True, page=page, with_auth=False)
 	return result, pages
 
 @plugin.cached(TTL=60, cache='Trakt')
 def trakt_get_watched_shows_paginated(page):
 	params = {'extended': 'full', 'limit': '20'}
-	result, pages = call_trakt('shows/watched/weekly?', params, pagination=True, page=page, with_auth=False)
+	result, pages = call_trakt('shows/watched/weekly', params, pagination=True, page=page, with_auth=False)
 	return result, pages
 
 @plugin.cached(TTL=60, cache='Trakt')
 def trakt_get_collected_shows_paginated(page):
 	params = {'extended': 'full', 'limit': '20'}
-	result, pages = call_trakt('shows/collected/weekly?', params, pagination=True, page=page, with_auth=False)
+	result, pages = call_trakt('shows/collected/weekly', params, pagination=True, page=page, with_auth=False)
 	return result, pages
 
 @plugin.cached(TTL=60, cache='Trakt')
 def trakt_get_trending_movies_paginated(page):
 	params = {'extended': 'full', 'limit': '20'}
-	result, pages = call_trakt('movies/trending?', params, pagination=True, page=page, with_auth=False)
+	result, pages = call_trakt('movies/trending', params, pagination=True, page=page, with_auth=False)
 	return result, pages
 
 @plugin.cached(TTL=60, cache='Trakt')
 def trakt_get_popular_movies_paginated(page):
 	params = {'extended': 'full', 'limit': '20'}
-	result, pages = call_trakt('movies/popular?', params, pagination=True, page=page, with_auth=False)
+	result, pages = call_trakt('movies/popular', params, pagination=True, page=page, with_auth=False)
 	return result, pages
 
 @plugin.cached(TTL=60, cache='Trakt')
 def trakt_get_watched_movies_paginated(page):
 	params = {'extended': 'full', 'limit': '20'}
-	result, pages = call_trakt('movies/watched/weekly?', params, pagination=True, page=page, with_auth=False)
+	result, pages = call_trakt('movies/watched/weekly', params, pagination=True, page=page, with_auth=False)
 	return result, pages
 
 @plugin.cached(TTL=60, cache='Trakt')
 def trakt_get_collected_movies_paginated(page):
 	params = {'extended': 'full', 'limit': '20'}
-	result, pages = call_trakt('movies/collected/weekly?', params, pagination=True, page=page, with_auth=False)
+	result, pages = call_trakt('movies/collected/weekly', params, pagination=True, page=page, with_auth=False)
 	return  result, pages
 
 @plugin.cached(TTL=60, cache='Trakt')
 def trakt_get_related_movies_paginated(imdb_id, page):
 	params = {'extended': 'full', 'limit': '20'}
-	return call_trakt('movies/%s/related?' % imdb_id, params, pagination=True, page=page, with_auth=False)
+	return call_trakt('movies/%s/related' % imdb_id, params, pagination=True, page=page, with_auth=False)
 
 @plugin.cached(TTL=60, cache='Trakt')
 def get_list(user, slug):

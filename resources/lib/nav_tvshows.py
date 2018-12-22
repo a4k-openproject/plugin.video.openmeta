@@ -73,12 +73,6 @@ def tv():
 			'thumbnail': nav_base.get_icon_path('traktcollection')
 		},
 		{
-			'label': 'Most collected Netflix (Trakt)',
-			'path': plugin.url_for('trakt_netflix_tv_collected', page=1),
-			'icon': nav_base.get_icon_path('traktcollection'),
-			'thumbnail': nav_base.get_icon_path('traktcollection')
-		},
-		{
 			'label': 'Popular (Trakt)',
 			'path': plugin.url_for('tv_trakt_popular', page=1),
 			'icon': nav_base.get_icon_path('traktrecommendations'),
@@ -177,21 +171,13 @@ def list_trakt_tvshows_watched_paginated(results, total_items, page):
 			})
 	return plugin.finish(items=items, sort_methods=SORT)
 
-@plugin.route('/tv/trakt/netflix_collected/<page>')
-def trakt_netflix_tv_collected(page, raw=False):
-	results, pages = Trakt.trakt_get_netflix_collected_shows(page)
-	if raw:
-		return results
-	else:
-		return list_trakt_tvshows(results, pages, page)
-
 @plugin.route('/tv/trakt/collected/<page>')
 def trakt_tv_collected(page, raw=False):
 	results, total_items = Trakt.trakt_get_collected_shows_paginated(page)
 	if raw:
 		return results
 	else:
-		return list_trakt_tvshows_collected_paginated(results, total_items, page)
+		return list_trakt_tvshows_watched_paginated(results, total_items, page)
 
 def list_trakt_tvshows_collected_paginated(results, total_items, page):
 	plugin.set_content('tvshows')
@@ -645,7 +631,7 @@ def list_trakt_episodes(result, with_time=False):
 			context_menu = []
 		items.append(
 			{
-				'label': label,   ####### TODO NOT WORKING AS INTENDED, ONLY PICKS UP "episode['title']"  #######
+				'label': label,
 				'path': plugin.url_for('tv_play', id=id, season=season_num, episode=episode_num),
 				'context_menu': context_menu,
 				'info': info,

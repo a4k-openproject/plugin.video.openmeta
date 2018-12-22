@@ -428,6 +428,7 @@ def movies_add_to_library(src, id):
 	if library_folder == False:
 		return
 	date = None
+	libmovie = []
 	if src == 'tmdb':
 		movie = Movies(id).info()
 		date = text.date_to_timestamp(movie.get('release_date'))
