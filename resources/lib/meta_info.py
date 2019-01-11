@@ -207,9 +207,9 @@ def get_season_metadata_tvmaze(show_metadata, season):
 
 def get_episode_metadata_tvdb(season_metadata, episode, banners=True):
 	info = copy.deepcopy(season_metadata)
-	info['episode'] = episode.get('episodenumber')
+	info['episode'] = int(episode.get('episodenumber'))
 	info['name'] = episode.get('episodename','')
-	info['title'] = u'%s. %s' % (info['episode'], info['name'])
+	info['title'] = u'%02d. %s' % (info['episode'], info['name'])
 	info['aired'] = episode.get('firstaired','')
 	info['premiered'] = episode.get('firstaired','')
 	info['rating'] = episode.get('rating', '')
