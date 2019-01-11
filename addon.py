@@ -1,7 +1,6 @@
 import os, sys, time, shutil
 import xbmc, xbmcplugin
 from resources.lib import Trakt
-from resources.lib import lists
 from resources.lib import updater
 from resources.lib import dialogs
 from resources.lib import settings
@@ -32,8 +31,14 @@ def root():
 			'thumbnail': nav_base.get_icon_path('tv')
 		},
 		{
-			'label': 'Trakt',
-			'path': plugin.url_for('lists'),
+			'label': 'My Movies (Trakt)',
+			'path': plugin.url_for('movie_lists'),
+			'icon': nav_base.get_icon_path('trakt'),
+			'thumbnail': nav_base.get_icon_path('trakt')
+		},
+		{
+			'label': 'My TV Shows (Trakt)',
+			'path': plugin.url_for('tv_lists'),
 			'icon': nav_base.get_icon_path('trakt'),
 			'thumbnail': nav_base.get_icon_path('trakt')
 		},
@@ -175,7 +180,7 @@ def root_search_edit(term):
 def root_search_term(term):
 	items = [
 		{
-			'label': 'Movies (TMDb) search - %s' % term,
+			'label': 'Movies (TMDB) search - %s' % term,
 			'path': plugin.url_for('tmdb_movies_search_term', term=term, page=1),
 			'icon': nav_base.get_icon_path('movies'),
 			'thumbnail': nav_base.get_icon_path('movies')
@@ -187,14 +192,8 @@ def root_search_term(term):
 			'thumbnail': nav_base.get_icon_path('movies')
 		},
 		{
-			'label': 'TV shows (TVDb) search - %s' % term,
+			'label': 'TV shows (TVDB) search - %s' % term,
 			'path': plugin.url_for('tvdb_tv_search_term', term=term, page=1),
-			'icon': nav_base.get_icon_path('tv'),
-			'thumbnail': nav_base.get_icon_path('tv')
-		},
-		{
-			'label': 'TV shows (TMDb) search - %s' % term,
-			'path': plugin.url_for('tmdb_tv_search_term', term=term, page=1),
 			'icon': nav_base.get_icon_path('tv'),
 			'thumbnail': nav_base.get_icon_path('tv')
 		},

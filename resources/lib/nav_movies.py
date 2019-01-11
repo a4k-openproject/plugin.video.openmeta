@@ -13,6 +13,8 @@ from resources.lib import play_movies
 from resources.lib.rpc import RPC
 from resources.lib.xswift2 import plugin
 
+############### TODO CHANGE ALL TRAKT ITEMS TO USE (list_trakt_movies) #########################
+
 ICON = nav_base.get_meta_icon_path()
 FANART = nav_base.get_background_path()
 SORT = [
@@ -35,13 +37,7 @@ SORTRAKT = [
 def movies():
 	items = [
 		{
-			'label': 'Genres (TMDb)',
-			'path': plugin.url_for('tmdb_movies_genres'),
-			'icon': nav_base.get_icon_path('genres'),
-			'thumbnail': nav_base.get_icon_path('genres')
-		},
-		{
-			'label': 'Blockbusters (TMDb)',
+			'label': 'Blockbusters (TMDB)',
 			'path': plugin.url_for('tmdb_movies_blockbusters', page=1),
 			'icon': nav_base.get_icon_path('most_voted'),
 			'thumbnail': nav_base.get_icon_path('most_voted'),
@@ -49,7 +45,7 @@ def movies():
 				('Play (random)', 'RunPlugin(%s)' % plugin.url_for('tmdb_movies_play_random_blockbuster'))]
 		},
 		{
-			'label': 'In theatres (TMDb)',
+			'label': 'In theatres (TMDB)',
 			'path': plugin.url_for('tmdb_movies_now_playing', page=1),
 			'icon': nav_base.get_icon_path('intheatres'),
 			'thumbnail': nav_base.get_icon_path('intheatres'),
@@ -57,7 +53,7 @@ def movies():
 				('Play (random)', 'RunPlugin(%s)' % plugin.url_for('tmdb_movies_play_random_now_playing'))]
 		},
 		{
-			'label': 'Popular (TMDb)',
+			'label': 'Popular (TMDB)',
 			'path': plugin.url_for('tmdb_movies_popular', page=1),
 			'icon': nav_base.get_icon_path('popular'),
 			'thumbnail': nav_base.get_icon_path('popular'),
@@ -65,7 +61,7 @@ def movies():
 				('Play (random)', 'RunPlugin(%s)' % plugin.url_for('tmdb_movies_play_random_popular'))]
 		},
 		{
-			'label': 'Top rated (TMDb)',
+			'label': 'Top rated (TMDB)',
 			'path': plugin.url_for('tmdb_movies_top_rated', page=1),
 			'icon': nav_base.get_icon_path('top_rated'),
 			'thumbnail': nav_base.get_icon_path('top_rated'),
@@ -119,6 +115,12 @@ def movies():
 			'thumbnail': nav_base.get_icon_path('imdb'),
 			'context_menu': [
 				('Play (random)', 'RunPlugin(%s)' % plugin.url_for('trakt_movies_play_random_imdb_top_rated'))]
+		},
+		{
+			'label': 'Genres',
+			'path': plugin.url_for('tmdb_movies_genres'),
+			'icon': nav_base.get_icon_path('genres'),
+			'thumbnail': nav_base.get_icon_path('genres')
 		},
 		{
 			'label': 'Search movies',
@@ -225,7 +227,7 @@ def movies_search_edit(term):
 def movies_search_term(term, page):
 	items = [
 		{
-			'label': '(TMDb) Search - %s' % term,
+			'label': '(TMDB) Search - %s' % term,
 			'path': plugin.url_for('tmdb_movies_search_term', term=term, page=1),
 			'icon': nav_base.get_icon_path('movies'),
 			'thumbnail': nav_base.get_icon_path('movies')
@@ -246,14 +248,6 @@ def movies_search_term(term, page):
 		item['properties'] = {'fanart_image': FANART}
 	return items
 
-@plugin.route('/movies/trakt/search')
-def trakt_movies_search():
-	term = plugin.keyboard(heading='Enter search string')
-	if term != None and term != '':
-		return trakt_movies_search_term(term, 1)
-	else:
-		return
-
 @plugin.route('/movies/trakt/search/<term>/<page>')
 def trakt_movies_search_term(term, page):
 	plugin.set_content('movies')
@@ -267,7 +261,8 @@ def trakt_movies_latest_releases(raw=False):
 	if raw:
 		return results
 	else:
-		movies = [meta_info.get_trakt_movie_metadata(item['movie']) for item in results]
+		genres_dict = dict([(x['slug'], x['name']) for x in Trakt.trakt_get_genres('movies')])
+		movies = [meta_info.get_trakt_movie_metadata(item['movie'], genres_dict) for item in results]
 		items = [make_movie_item(movie) for movie in movies]
 		return plugin.finish(items=items)
 
@@ -363,14 +358,6 @@ def trakt_movies_play_random_trending():
 	trakt_movies_play_random(result)
 
 
-@plugin.route('/movies/tmdb/search')
-def tmdb_movies_search():
-	term = plugin.keyboard(heading='Enter search string')
-	if term != None and term != '':
-		return tmdb_movies_search_term(term, 1)
-	else:
-		return
-
 @plugin.route('/movies/tmdb/search_term/<term>/<page>')
 def tmdb_movies_search_term(term, page):
 	plugin.set_content('movies')
@@ -428,7 +415,6 @@ def movies_add_to_library(src, id):
 	if library_folder == False:
 		return
 	date = None
-	libmovie = []
 	if src == 'tmdb':
 		movie = Movies(id).info()
 		date = text.date_to_timestamp(movie.get('release_date'))
@@ -700,3 +686,245 @@ def make_movie_item(movie_info):
 		'stream_info': {'video': {}},
 		'info': movie_info
 		}
+
+@plugin.route('/movie_lists')
+def movie_lists():
+	items = [
+		{
+			'label': 'My Collection',
+			'path': plugin.url_for('lists_trakt_movies_collection'),
+			'icon': nav_base.get_icon_path('traktcollection'),
+			'thumbnail': nav_base.get_icon_path('traktcollection'),
+			'context_menu': [
+				('Play (random)', 'RunPlugin(%s)' % plugin.url_for('lists_trakt_movies_play_random_collection')),
+				('Add to library', 'RunPlugin(%s)' % plugin.url_for('lists_trakt_movies_collection_to_library'))]
+		},
+		{
+			'label': 'My Watchlist',
+			'path': plugin.url_for('trakt_movies_watchlist'),
+			'icon': nav_base.get_icon_path('traktwatchlist'),
+			'thumbnail': nav_base.get_icon_path('traktwatchlist'),
+			'context_menu': [
+					('Play (random)', 'RunPlugin(%s)' % plugin.url_for('trakt_movies_play_random_watchlist'))]
+		},
+		{
+			'label': 'My Lists',
+			'path': plugin.url_for('lists_trakt_my_movie_lists'),
+			'icon': nav_base.get_icon_path('traktmylists'),
+			'thumbnail': nav_base.get_icon_path('traktmylists')
+		},
+		{
+			'label': 'Liked Lists',
+			'path': plugin.url_for('lists_trakt_liked_movie_lists', page=1),
+			'icon': nav_base.get_icon_path('traktlikedlists'),
+			'thumbnail': nav_base.get_icon_path('traktlikedlists')
+		},
+		{
+			'label': 'Search Lists',
+			'path': plugin.url_for('lists_trakt_search_for_movie_lists'),
+			'icon': nav_base.get_icon_path('search'),
+			'thumbnail': nav_base.get_icon_path('search')
+		}]
+	for item in items:
+		item['properties'] = {'fanart_image': FANART}
+	return items
+
+@plugin.route('/movie_lists/watchlist')
+def trakt_movies_watchlist(raw=False):
+	result = Trakt.trakt_get_watchlist('movies')
+	if raw:
+		return result
+	else:
+		return list_trakt_movies(result, '1', '1')
+
+@plugin.route('/movie_lists/watchlist/movies_play_random')
+def trakt_movies_play_random_watchlist():
+	trakt_movies_play_random(trakt_movies_watchlist(raw=True))
+
+@plugin.route('/movie_lists/trakt_my_movie_lists')
+def lists_trakt_my_movie_lists():
+	lists = Trakt.trakt_get_lists()
+	items = []
+	for list in lists:
+		name = list['name']
+		user = list['user']['username']
+		slug = list['ids']['slug']
+		items.append(
+			{
+				'label': name,
+				'path': plugin.url_for('lists_trakt_show_movie_list', user = user, slug = slug),
+				'icon': nav_base.get_icon_path('traktmylists'),
+				'thumbnail': nav_base.get_icon_path('traktmylists')
+			})
+		for item in items:
+			item['properties'] = {'fanart_image': FANART}
+	return plugin.finish(items=items, sort_methods=SORT)
+
+@plugin.route('/movie_lists/trakt_liked_movie_lists/<page>')
+def lists_trakt_liked_movie_lists(page):
+	lists, pages = Trakt.trakt_get_liked_lists(page)
+	items = []
+	for list in lists:
+		info = list['list']
+		name = info['name']
+		user = info['user']['username']
+		slug = info['ids']['slug']
+		items.append(
+			{
+				'label': name,
+				'path': plugin.url_for('lists_trakt_show_movie_list', user = user, slug = slug),
+				'icon': nav_base.get_icon_path('traktlikedlists'),
+				'thumbnail': nav_base.get_icon_path('traktlikedlists')
+			})
+		for item in items:
+			item['properties'] = {'fanart_image': FANART}
+	nextpage = int(page) + 1
+	if pages > page:
+		items.append(
+			{
+				'label': '%s/%s  [I]Next page[/I]  >>' % (nextpage, pages),
+				'path': plugin.url_for('lists_trakt_liked_movie_lists', page=int(page) + 1),
+				'icon': nav_base.get_icon_path('item_next'),
+				'thumbnail': nav_base.get_icon_path('item_next')
+			})
+	return plugin.finish(items=items, sort_methods=SORT)
+
+@plugin.route('/movie_lists/collection')
+def lists_trakt_movies_collection(raw=False):
+	plugin.set_content('movies')
+	results = sorted(Trakt.trakt_get_collection('movies'), key=lambda k: k['collected_at'], reverse=True)
+	if raw:
+		return results
+	movies = [meta_info.get_trakt_movie_metadata(item['movie']) for item in results]
+	items = [make_movie_item(movie) for movie in movies]
+	return plugin.finish(items=items)
+
+@plugin.route('/movie_lists/collection/movies_to_library')
+def lists_trakt_movies_collection_to_library():
+	movies_add_all_to_library(Trakt.trakt_get_collection('movies'))
+
+@plugin.route('/movie_lists/collection/movies_play_random')
+def lists_trakt_movies_play_random_collection():
+	movies = lists_trakt_movies_collection(raw=True)
+	for movie in movies:
+		movie['type'] = 'movie'
+	playrandom.trakt_play_random(movies)
+
+@plugin.route('/movie_lists/show_movie_list/<user>/<slug>')
+def lists_trakt_show_movie_list(user, slug, raw=False):
+	plugin.set_content('movies')
+	list_items = Trakt.get_list(user, slug)
+	if raw:
+		return list_items
+	return _lists_trakt_show_movie_list(list_items)
+
+@plugin.route('/movie_lists/play_random/<user>/<slug>')
+def lists_trakt_play_random(user, slug):
+	items = lists_trakt_show_movie_list(user, slug, raw=True)
+	playrandom.trakt_play_random(items)
+
+@plugin.route('/movie_lists/trakt_search_for_movie_lists')
+def lists_trakt_search_for_movie_lists():
+	term = plugin.keyboard(heading='Enter search string')
+	if term != None and term != '':
+		return lists_search_for_movie_lists_term(term, 1)
+	else:
+		return
+
+@plugin.route('/movie_lists/search_for_movie_lists_term/<term>/<page>')
+def lists_search_for_movie_lists_term(term, page):
+	lists, pages = Trakt.search_for_list(term, page)
+	items = []
+	for list in lists:
+		if 'list' in list:
+			list_info = list['list']
+		else:
+			continue
+		name = list_info['name']
+		user = list_info['username']
+		slug = list_info['ids']['slug']
+		total = list_info['item_count']
+		info = {}
+		info['title'] = name
+		if 'description' in list_info:
+			info['plot'] = list_info['description']
+		else:
+			info['plot'] = 'No description available'
+		if user != None and total != None and total != 0:
+			items.append(
+				{
+					'label': '%s - %s (%s)' % (text.to_utf8(name), text.to_utf8(user), total),
+					'path': plugin.url_for('lists_trakt_show_list', user=user, slug=slug),
+					'context_menu': [
+						('Play (random)', 'RunPlugin(%s)' % plugin.url_for('lists_trakt_play_random', user=user, slug=slug))],
+					'info': info,
+					'icon': nav_base.get_icon_path('traktlikedlists'),
+					'thumbnail': nav_base.get_icon_path('traktlikedlists')
+				})
+			for item in items:
+				item['properties'] = {'fanart_image': FANART}
+	nextpage = int(page) + 1
+	if pages > page:
+		items.append(
+			{
+				'label': '%s/%s  [I]Next page[/I]  >>' % (nextpage, pages),
+				'path': plugin.url_for('lists_search_for_movie_lists_term', term = term, page=int(page) + 1),
+				'icon': nav_base.get_icon_path('item_next'),
+				'thumbnail': nav_base.get_icon_path('traktlikedlists'),
+				'properties': {'fanart_image': FANART}
+			})
+	return plugin.finish(items=items, sort_methods=SORT)
+
+@plugin.route('/movie_lists/_show_movie_list/<list_items>')
+def _lists_trakt_show_movie_list(list_items):
+	from resources.lib.TheMovieDB import People
+	items = []
+	for list_item in list_items:
+		item = None
+		item_type = list_item['type']
+		if item_type == 'movie':
+			movie = list_item['movie']
+			movie_info = meta_info.get_trakt_movie_metadata(movie)
+			try:
+				tmdb_id = movie_info['tmdb']
+			except:
+				tmdb_id = ''
+			try:
+				imdb_id = movie_info['imdb']
+			except:
+				imdb_id = ''
+			if tmdb_id != None and tmdb_id != '':
+				src = 'tmdb'
+				id = tmdb_id
+			elif imdb_id != None and mdb_id != '':
+				src = 'imdb'
+				id = imdb_id
+			else:
+				src = ''
+				id = ''
+			if src == '':
+				item = None
+			item = make_movie_item(movie_info)
+		elif item_type == 'person':
+			person_id = list_item['person']['ids']['trakt']
+			person_tmdb_id = list_item['person']['ids']['tmdb']
+			try:
+				person_images = People(person_tmdb_id).images()['profiles']
+				person_image = 'https://image.tmdb.org/t/p/w640' + person_images[0]['file_path']
+			except:
+				person_image = ''
+			person_name = text.to_utf8(list_item['person']['name'])
+			item = (
+				{
+					'label': person_name,
+					'path': plugin.url_for('trakt_movies_person', person_id=person_id),
+					'thumbnail': person_image,
+					'icon': nav_base.get_icon_path('movies'),
+					'poster': person_image,
+					'properties': {'fanart_image': person_image}
+				})
+		if item is not None:
+			items.append(item)
+	for item in items:
+		item['properties'] = {'fanart_image': FANART}
+	return items

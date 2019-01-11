@@ -177,6 +177,12 @@ def trakt_get_calendar():
 	return call_trakt('calendars/my/shows', params)
 
 @plugin.cached(TTL=60, cache='Trakt')
+def trakt_get_netflix_collected_shows(page):
+	params = {'networks': 'Netflix', 'extended': 'full', 'limit': '20'}
+	result, pages = call_trakt('shows/collected/weekly?', params, pagination=True, page=page, with_auth=False)
+	return result, pages
+
+@plugin.cached(TTL=60, cache='Trakt')
 def trakt_get_next_episodes():
 	params = {'extended': 'noseasons,full'}
 	shows = call_trakt('sync/watched/shows', params)
