@@ -13,11 +13,7 @@ class AddonPlayer(object):
 		self.commands = meta.get(media, [])
 
 	def is_empty(self):
-		if "," in self.pluginid:
-			PLUGINS = [xbmc.getCondVisibility('System.HasAddon(%s)' % p) for p in self.pluginid.split(",")]
-			if False in PLUGINS:
-				return True
-		elif self.pluginid and not xbmc.getCondVisibility('System.HasAddon(%s)' % self.pluginid):
+		if self.pluginid and not xbmc.getCondVisibility('System.HasAddon(%s)' % self.pluginid):
 			return True
 		return not bool(self.commands)
 

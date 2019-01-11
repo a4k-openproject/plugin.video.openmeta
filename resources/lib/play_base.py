@@ -27,13 +27,6 @@ def action_play(item):
 def action_playmedia(item):
 	xbmc.executebuiltin('PlayMedia("%s")' % item)
 
-def substr(data):
-	substrs = lambda x: {x[i:i+j] for i in range(len(x)) for j in range(len(x) - i + 1)}
-	s = substrs(data[0])
-	for val in data[1:]:
-		s.intersection_update(substrs(val))
-	return max(s, key=len)
-
 def get_video_link(players, params):
 	lister = listers.Lister()
 	for lang, lang_params in params.items():
@@ -50,18 +43,14 @@ def get_video_link(players, params):
 			if index == -1:
 				return None
 			players = [players[index]]
-		resolve_f = lambda p: resolve_player(p, lister, params)	
+		resolve_f = lambda p: resolve_player(p, lister, params)
 		result = resolve_f(players[0])
 		if result:
 			title, links = result
 			if len(links) == 1:
 				selection = links[0]
 			else:
-				common = substr([x['label'] for x in links])
-				try:
-					index = dialogs.select('Play using...', [x['label'].replace(common,"") for x in links])
-				except:
-					index = dialogs.select('Play using...', [x['label'] for x in links])
+				index = dialogs.select('Play using...', [x['label'] for x in links])
 				if index > -1:
 					selection = links[index]
 		else:
