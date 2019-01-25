@@ -1,7 +1,6 @@
 import re, copy, threading
 import xbmc, xbmcgui, xbmcaddon
 from resources.lib import text
-from resources.lib import dialogs
 from resources.lib.rpc import RPC
 from resources.lib.xswift2 import plugin
 

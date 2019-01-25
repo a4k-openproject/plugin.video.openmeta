@@ -1,12 +1,22 @@
-import json, traceback
-import xbmc
+import json
+import xbmc, xbmcgui
 from resources.lib import text
 from resources.lib import tools
 from resources.lib import Trakt
-from resources.lib import dialogs
-from resources.lib import listers
-from resources.lib import properties
+from resources.lib.listers import Lister
 from resources.lib.xswift2 import plugin
+
+
+@plugin.route('/play/<label>')
+def play_by_label(label):
+	types = ['Movies', 'TV shows']
+	selection = plugin.select('Search for "%s"' % label, [item for item in types])
+	base = 'RunPlugin(plugin://plugin.video.openmeta'
+	info = xbmc.getInfoLabel
+	if selection   == 0:
+		xbmc.executebuiltin('%s/movies/play_by_name/%s/en)' % (base, label))
+	elif selection == 1:
+		xbmc.executebuiltin('%s/tv/play_by_name/%s/%s/%s/%s/en)' % (base, info('ListItem.TVShowTitle'), info('ListItem.Season'), info('ListItem.Episode'), label))
 
 @plugin.cached(TTL=60, cache='Trakt')
 def get_trakt_ids(*args, **kwargs):
@@ -15,9 +25,9 @@ def get_trakt_ids(*args, **kwargs):
 	except:
 		return None
 
-def action_cancel(clear_playlist=True):
-	if clear_playlist:
-		xbmc.PlayList(xbmc.PLAYLIST_VIDEO).clear()
+def action_cancel():
+	xbmc.PlayList(1).clear()
+	xbmc.PlayList(0).clear() # clearing music playlist somehow removes the playlist notification we get when using play from context menu on Kodi 18...
 	plugin.set_resolved_url()
 	xbmc.executebuiltin('Dialog.Close(okdialog, true)')
 
@@ -28,7 +38,6 @@ def action_playmedia(item):
 	xbmc.executebuiltin('PlayMedia("%s")' % item)
 
 def get_video_link(players, params):
-	lister = listers.Lister()
 	for lang, lang_params in params.items():
 		for key, value in lang_params.items():
 			if isinstance(value, basestring):
@@ -39,25 +48,24 @@ def get_video_link(players, params):
 	selection = None
 	try:
 		if len(players) > 1:
-			index = dialogs.select('Play using...', [player.title for player in players])
+			index = plugin.select('Play with...', [player.title for player in players])
 			if index == -1:
 				return None
 			players = [players[index]]
-		resolve_f = lambda p: resolve_player(p, lister, params)
+		resolve_f = lambda p: resolve_player(p, Lister(), params)
 		result = resolve_f(players[0])
 		if result:
 			title, links = result
 			if len(links) == 1:
 				selection = links[0]
 			else:
-				index = dialogs.select('Play using...', [x['label'] for x in links])
+				index = plugin.select('Play with...', [x['label'] for x in links])
 				if index > -1:
 					selection = links[index]
 		else:
-			message = 'Video not found'
-			dialogs.ok('Error', message)
+			plugin.ok('Error', 'Video not found')
 	finally:
-		lister.stop()
+		Lister().stop()
 	return selection
 
 def on_play_video(players, params, trakt_ids=None):
@@ -73,18 +81,18 @@ def on_play_video(players, params, trakt_ids=None):
 		return action_playmedia(link)
 	else:
 		if trakt_ids:
-			properties.set_property('script.trakt.ids', json.dumps(trakt_ids))
+			xbmcgui.Window(10000).setProperty('script.trakt.ids', json.dumps(trakt_ids))
 		return link
 	return None
 
 def resolve_player(player, lister, params):
 	results = []
 	for command_group in player.commands:  
-		if xbmc.abortRequested or not lister.is_active():
+		if xbmc.abortRequested or not Lister().is_active():
 			return
 		command_group_results = []
 		for command in command_group:
-			if xbmc.abortRequested or not lister.is_active():
+			if xbmc.abortRequested or not Lister().is_active():
 				return
 			lang = command.get('language', 'en')
 			if not lang in params:
@@ -110,7 +118,7 @@ def resolve_player(player, lister, params):
 					})
 			else:
 				steps = [text.to_unicode(step) for step in command['steps']]
-				files, dirs = lister.get(link, steps, parameters)
+				files, dirs = Lister().get(link, steps, parameters)
 				if files:
 					command_group_results += [
 						{

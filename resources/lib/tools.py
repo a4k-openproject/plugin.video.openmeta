@@ -4,6 +4,18 @@ from xml.etree import ElementTree
 import xbmc
 from resources.lib.rpc import RPC
 
+def show_busy():
+	if int(xbmc.getInfoLabel('System.BuildVersion')[:2]) > 17:
+		xbmc.executebuiltin('ActivateWindow(busydialognocancel)')
+	else:
+		xbmc.executebuiltin('ActivateWindow(busydialog)')
+
+def hide_busy():
+	if int(xbmc.getInfoLabel('System.BuildVersion')[:2]) > 17:
+		xbmc.executebuiltin('Dialog.Close(busydialognocancel)')
+	else:
+		xbmc.executebuiltin('Dialog.Close(busydialog)')
+
 def scan_library(path=None):
 	while not xbmc.abortRequested and (xbmc.getCondVisibility('Library.IsScanning') or xbmc.getCondVisibility('Window.IsActive(progressdialog)')):
 		xbmc.sleep(1000)

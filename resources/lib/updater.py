@@ -1,6 +1,5 @@
 import os, io, shutil, base64, zipfile, urllib2, urlparse, contextlib
 import xbmc
-from resources.lib import dialogs
 from resources.lib.xswift2 import plugin
  
 def remove_auth(url):
@@ -69,7 +68,7 @@ def flat_extract(z, extract_to, members=None):
 		if xbmc.getInfoLabel('Window(home).Property(running)') == 'totalopenmeta':
 			empty_folder(extract_to)
 		else:
-			if dialogs.yesno('OpenMeta: Update players', 'Do you want to remove existing players first?'):
+			if plugin.yesno('OpenMeta: Update players', 'Do you want to remove existing players first?'):
 				empty_folder(extract_to)
 	for member in members:
 		with contextlib.closing(z.open(member)) as source:

@@ -1,10 +1,9 @@
 import os, io, time, urllib, zipfile, requests_cache
 from xml.etree import ElementTree
 from resources.lib import text
-from resources.lib import settings
 from resources.lib.xswift2 import plugin
 
-ext_key = plugin.get_setting(settings.SETTING_TVDB_API, str)
+ext_key = plugin.get_setting('tvdb_api', str)
 
 if len(ext_key) == 16:
 	API_key = ext_key

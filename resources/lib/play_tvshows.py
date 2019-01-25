@@ -1,11 +1,13 @@
 import re, json, urllib, datetime
-import xbmc
+import xbmc, xbmcgui
 from resources.lib import text
-from resources.lib import dialogs
 from resources.lib import meta_info
 from resources.lib import play_base
-from resources.lib import properties
 from resources.lib import meta_players
+from resources.lib.xswift2 import plugin
+
+NTH = {1: 'first', 2: 'second', 3: 'third', 5: 'fifth', 8: 'eigth'}
+DCS = {2: 'twenty', 3: 'thirty', 4: 'fourty', 5: 'fifty', 6: 'sixty'}
 
 def play_episode(id, season, episode):
 	from resources.lib.TheTVDB import TVDB
@@ -39,16 +41,16 @@ def play_episode(id, season, episode):
 			if trakt_ids['tmdb'] != None and trakt_ids['tmdb'] != '':
 				return tmdb_play_episode(trakt_ids['tmdb'], season, episode)
 			elif trakt_ids['tvdb'] == None or trakt_ids['tvdb'] == '':
-				return dialogs.ok('Information not found for:', '%s - S%sE%s' % (show_info['name'], season, episode))
+				plugin.ok('Information not found for:', '%s - S%sE%s' % (show_info['name'], season, episode))
 			else:
-				return dialogs.ok('Information not found for:', '%s - S%sE%s' % (show_info['name'], season, episode))
+				plugin.ok('Information not found for:', '%s - S%sE%s' % (show_info['name'], season, episode))
 		if trakt_ids != None:
 			params[lang].update(trakt_ids)
 		params[lang]['info'] = show_info
 		params[lang] = text.to_unicode(params[lang])
 	link = play_base.on_play_video(players, params, trakt_ids)
 	if link:
-		properties.set_property('data', json.dumps(
+		xbmcgui.Window(10000).setProperty('plugin.video.openmeta.data', json.dumps(
 			{
 				'dbid': dbid,
 				'tvdb': id,
@@ -66,7 +68,7 @@ def play_episode(id, season, episode):
 				'info_type': 'video',
 				'thumbnail': episode_info['poster'],
 				'poster': episode_info['poster'],
-				'properties': {'fanart_image': episode_info['fanart']}
+				'fanart': episode_info['fanart']
 			})
 
 def tmdb_play_episode(id, season, episode):
@@ -80,7 +82,7 @@ def tmdb_play_episode(id, season, episode):
 		dbid = int(dbid)
 	except:
 		dbid = None
-	show = TV(id).info(language='en', append_to_response='external_ids,images,similar,videos')
+	show = TV(id).info(language='en', append_to_response='external_ids,images')
 	if 'first_air_date' in show and show['first_air_date'] != None:
 		year = show['first_air_date'][:4]
 	else:
@@ -94,11 +96,11 @@ def tmdb_play_episode(id, season, episode):
 		title = None
 	show_info = meta_info.get_tvshow_metadata_tmdb(show)
 	title = show_info['name']
-	preason = TV_Seasons(id, season).info(language='en', append_to_response='external_ids,images,similar,videos')
+	preason = TV_Seasons(id, season).info(language='en', append_to_response='external_ids,images')
 	if 'The resource you requested could not be found' in str(preason):
 		return trakt_play_episode(trakt_ids['trakt'], season, episode)
 	season_info = meta_info.get_season_metadata_tmdb(show_info, preason)
-	prepisode = TV_Episodes(id, season, episode).info(language='en', append_to_response='external_ids,images,similar,videos')
+	prepisode = TV_Episodes(id, season, episode).info(language='en', append_to_response='external_ids,images')
 	if prepisode == '{u"status_code": 34, u"status_message": u"The resource you requested could not be found."}':
 		return trakt_play_episode(trakt_ids['tmdb'], season, episode)
 	episode_info = meta_info.get_episode_metadata_tmdb(season_info, prepisode)
@@ -129,17 +131,15 @@ def tmdb_play_episode(id, season, episode):
 			if trakt_ids['trakt'] != None and trakt_ids['trakt'] != '':
 				return trakt_play_episode(trakt_ids['trakt'], season, episode)
 			else:
-				title = 'Episode information not found'
 				msg = 'No TMDb information found for %s - S%sE%s' % (show_info['name'], season, episode)
-				dialogs.ok(title, msg)
-				return
+				plugin.ok('Episode information not found', msg)
 		if trakt_ids != None:
 			params[lang].update(trakt_ids)
 		params[lang]['info'] = show_info
 		params[lang] = text.to_unicode(params[lang])
 	link = play_base.on_play_video(players, params, trakt_ids)
 	if link:
-		properties.set_property('data', json.dumps(
+		xbmcgui.Window(10000).setProperty('plugin.video.openmeta.data', json.dumps(
 			{
 				'dbid': dbid,
 				'tmdb': id,
@@ -156,7 +156,7 @@ def tmdb_play_episode(id, season, episode):
 				'info_type': 'video',
 				'thumbnail': episode_info['poster'],
 				'poster': episode_info['poster'],
-				'properties': {'fanart_image': str(show_info['fanart'])}
+				'fanart': str(show_info['fanart'])
 			})
 
 def trakt_play_episode(id, season, episode):
@@ -221,25 +221,22 @@ def trakt_play_episode(id, season, episode):
 		if episode_parameters is not None:
 			params[lang] = episode_parameters
 		else:
-			title = 'Episode information not found'
 			if trakt_ids['tmdb'] != None and trakt_ids['tmdb'] != '' and tried != 'tmdb': 
 				tried = 'tmdb'
 				return tvdb_play_episode(trakt_ids['tvdb'], season, episode)
 			elif tried == 'tmdb':
 				msg = 'No TVDb or TMDb information found for %s - S%sE%s' % (show_info['name'], season, episode)
-				dialogs.ok(title, msg)
-				return
+				plugin.ok('Episode information not found', msg)
 			else:
 				msg = 'No TMDb information found for %s - S%sE%s' % (show_info['name'], season, episode)
-				dialogs.ok(title, msg)
-				return
+				plugin.ok('Episode information not found', msg)
 		if trakt_ids != None:
 			params[lang].update(trakt_ids)
 		params[lang]['info'] = show_info
 		params[lang] = text.to_unicode(params[lang])
 	link = play_base.on_play_video(players, params, trakt_ids)
 	if link:
-		properties.set_property('data', json.dumps(
+		xbmcgui.Window(10000).setProperty('plugin.video.openmeta.data', json.dumps(
 			{
 				'dbid': dbid,
 				'trakt': id,
@@ -256,7 +253,7 @@ def trakt_play_episode(id, season, episode):
 				'info_type': 'video',
 				'thumbnail': episode_info['poster'],
 				'poster': episode_info['poster'],
-				'properties': {'fanart_image': str(show_info['fanart'])}
+				'fanart': str(show_info['fanart'])
 			})
 
 def tvmaze_play_episode(id, season, episode, title=None):
@@ -329,25 +326,22 @@ def tvmaze_play_episode(id, season, episode, title=None):
 		if episode_parameters is not None:
 			params[lang] = episode_parameters
 		else:
-			title = 'Episode information not found'
 			if trakt_ids['tmdb'] != None and trakt_ids['tmdb'] != '' and tried != 'tmdb': 
 				tried = 'tmdb'
 				return tvdb_play_episode(trakt_ids['tvdb'], season, episode)
 			elif tried == 'tmdb':
 				msg = 'No TVDb or TMDb information found for %s - S%sE%s' % (show_info['name'], season, episode)
-				dialogs.ok('Episode information not found', msg)
-				return
+				plugin.ok('Episode information not found', msg)
 			else:
 				msg = 'No TMDb information found for %s - S%sE%s' % (show_info['name'], season, episode)
-				dialogs.ok('Episode information not found', msg)
-				return
+				plugin.ok('Episode information not found', msg)
 		if trakt_ids != None:
 			params[lang].update(trakt_ids)
 		params[lang]['info'] = show_info
 		params[lang] = text.to_unicode(params[lang])
 	link = play_base.on_play_video(players, params, trakt_ids)
 	if link:
-		properties.set_property('data', json.dumps(
+		xbmcgui.Window(10000).setProperty('plugin.video.openmeta.data', json.dumps(
 			{
 				'dbid': dbid,
 				'tvdb': trakt_ids['tvdb'],
@@ -364,7 +358,7 @@ def tvmaze_play_episode(id, season, episode, title=None):
 				'info_type': 'video',
 				'thumbnail': episode_info['poster'],
 				'poster': episode_info['poster'],
-				'properties': {'fanart_image': str(show_info['fanart'])}
+				'fanart': str(show_info['fanart'])
 			})
 
 def escape(str):
@@ -389,7 +383,22 @@ def get_episode_parameters(show, season, episode):
 	episodes = 0
 	for i in show.items():
 		episodes += len(i[1].items())
+		if i[0] != 0 and i[0] < (season -1):
+			count += len(i[1].items())
 	parameters = {'id': show['id'], 'season': season, 'episode': episode}
+	if season in NTH:
+		parameters['season_ordinal'] = NTH[season]
+	else:
+		try:
+			if text.number_to_text(season) in (season, ''):
+				if int(str(season)[-1]) in NTH:
+					parameters['season_ordinal'] = '%s%s' % (DCD[int(str(season)[-2])], NTH[int(str(season)[-1])])
+				else:
+					parameters['season_ordinal'] = '%s%sth' % (DCD[int(str(season)[-2])], text.number_to_text(int(str(season)[-1])))
+			else:
+				parameters['season_ordinal'] = '%sth' % text.number_to_text(season)
+		except:
+			pass
 	parameters['episodes'] = episodes
 	parameters['seasons'] = len(show.items())
 	parameters['seasons_no_specials'] = len([season_num for (season_num, season) in show.items() if season_num != 0])
@@ -417,8 +426,8 @@ def get_episode_parameters(show, season, episode):
 	try:
 		parameters['absolute_number'] = int(episode_obj.get('absolute_number'))
 	except:
-		parameters['absolute_number'] = 'na'
-	parameters['title'] = episode_obj.get('episodename', str(episode)).replace('&', '%26')
+		parameters['absolute_number'] = count + episode
+	parameters['title'] = text.escape(episode_obj.get('episodename', str(episode)))
 	parameters['urltitle'] = urllib.quote(text.to_utf8(parameters['title']))
 	parameters['sorttitle'] = text.to_utf8(parameters['title'])
 	for article in articles:
@@ -444,10 +453,10 @@ def get_episode_parameters(show, season, episode):
 	parameters['eptvrage'] = 0
 	parameters['epid'] = episode_obj.get('id')
 	if episode_obj.get('id') != '':
-		parameters['plot'] = escape(episode_obj.get('overview'))
+		parameters['plot'] = text.escape(episode_obj.get('overview'))
 	else:
-		parameters['plot'] = show['overview']
-	parameters['series_plot'] = show['overview']
+		parameters['plot'] = text.escape(show['overview'])
+	parameters['series_plot'] = text.escape(show['overview'])
 	if episode_obj.get('rating') not in (None, ''):
 		parameters['rating'] = episode_obj.get('rating')
 	elif show.get('rating') not in (None, ''):
@@ -483,7 +492,7 @@ def get_episode_parameters(show, season, episode):
 		parameters['thumbnail'] = show.get('poster')
 	if show.get('poster') != '' and show.get('poster') is not None:
 		parameters['poster'] = show.get('poster')
-	parameters['thumbnail'] = tvdb_base + 'episodes/' + str(show['id']) + '/' + str(parameters['epid']) + '.jpg'
+	parameters['thumbnail'] = '%sepisodes/%s/%s.jpg' % (tvdb_base, str(show['id']), str(parameters['epid']))
 	parameters['banner'] = show.get('banner')
 	if show.get('fanart') != None and show.get('fanart') != '':
 		parameters['fanart'] = show.get('fanart')
@@ -496,9 +505,9 @@ def get_episode_parameters(show, season, episode):
 			if 'JP' in tmdb_show['origin_country']:
 				is_anime = True
 	if is_anime:
-		parameters['name'] = u'{showname} {absolute_number}'.format(**parameters)
+		parameters['name'] = u'%s %s' % (parameters['showname'], parameters['absolute_number'])
 	else:
-		parameters['name'] = u'{showname} S{season:02d}E{episode:02d}'.format(**parameters)
+		parameters['name'] = u'%s S%02dE%02d' % (parameters['showname'], parameters['season'], parameters['episode'])
 	parameters['now'] = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
 	trakt_ids = play_base.get_trakt_ids('tvdb', show['id'], parameters['clearname'], 'show', parameters['year'])
 	if 'slug' in trakt_ids:
@@ -558,7 +567,6 @@ def get_tmdb_episode_parameters(show, preason, prepisode):
 	else:
 		parameters['fanart'] = ''
 	parameters['thumbnail'] = parameters['poster']
-	parameters['icon'] = parameters['poster']
 	try:
 		genre = [x for x in show['genre'].split('|') if not x == '']
 	except:
@@ -569,9 +577,9 @@ def get_tmdb_episode_parameters(show, preason, prepisode):
 	else:
 		is_anime = False
 	if is_anime:
-		parameters['name'] = u'{showname} {absolute_number}'.format(**parameters)
+		parameters['name'] = u'%s %s' % (parameters['showname'], parameters['absolute_number'])
 	else:
-		parameters['name'] = u'{showname} S{season:02d}E{episode:02d}'.format(**parameters)
+		parameters['name'] = u'%s S%02dE%02d' % (parameters['showname'], parameters['season'], parameters['episode'])
 	parameters['now'] = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
 	return parameters
 
@@ -625,7 +633,6 @@ def get_trakt_episode_parameters(show, preason, prepisode):
 	else:
 		parameters['fanart'] = ''
 	parameters['thumbnail'] = parameters['poster']
-	parameters['icon'] = parameters['poster']
 	try:
 		genre = [x for x in show['genre'].split('|') if not x == '']
 	except:
@@ -636,9 +643,9 @@ def get_trakt_episode_parameters(show, preason, prepisode):
 	else:
 		is_anime = False
 	if is_anime:
-		parameters['name'] = u'{showname} {absolute_number}'.format(**parameters)
+		parameters['name'] = u'%s %s' % (parameters['showname'], parameters['absolute_number'])
 	else:
-		parameters['name'] = u'{showname} S{season:02d}E{episode:02d}'.format(**parameters)
+		parameters['name'] = u'%s S%02dE%02d' % (parameters['showname'], parameters['season'], parameters['episode'])
 	parameters['now'] = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
 	return parameters
 
@@ -691,7 +698,6 @@ def get_tvmaze_episode_parameters(show, preason, prepisode):
 		parameters['poster'] = show['image']['original']
 	parameters['fanart'] = ''
 	parameters['thumbnail'] = parameters['poster']
-	parameters['icon'] = parameters['poster']
 	parameters['genre'] = show['type']
 	parameters['now'] = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
 	return parameters
