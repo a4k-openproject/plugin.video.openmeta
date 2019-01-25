@@ -1,6 +1,7 @@
 import json
-import xbmc, xbmcgui
+import xbmc
 from resources.lib.rpc import RPC
+from resources.lib.xswift2 import plugin
 
 class VideoPlayer(xbmc.Player):
 	def __init__(self, *args, **kwargs):
@@ -13,7 +14,7 @@ class VideoPlayer(xbmc.Player):
 		self.currentTime = 0
 
 	def currently_playing(self):
-		video_data = xbmcgui.Window(10000).getProperty('plugin.video.openmeta.data')
+		video_data = plugin.getProperty('plugin.video.openmeta.data')
 		if video_data:
 			try:
 				video_data = json.loads(video_data)
@@ -47,15 +48,15 @@ class VideoPlayer(xbmc.Player):
 			self.totalTime = self.getTotalTime()
 
 	def onPlayBackEnded(self):
-		xbmcgui.Window(10000).clearProperty('script.trakt.ids')
-		xbmcgui.Window(10000).clearProperty('plugin.video.openmeta.data')
+		plugin.clearProperty('script.trakt.ids')
+		plugin.clearProperty('plugin.video.openmeta.data')
 		if self.totalTime > 0 and self.currentTime / self.totalTime >= 0.75:
 			self.mark_as_watched()
 		self.reset()
 
 	def onPlayBackStopped(self):
-		xbmcgui.Window(10000).clearProperty('script.trakt.ids')
-		xbmcgui.Window(10000).clearProperty('plugin.video.openmeta.data')
+		plugin.clearProperty('script.trakt.ids')
+		plugin.clearProperty('plugin.video.openmeta.data')
 		if self.totalTime > 0 and self.currentTime / self.totalTime >= 0.75:
 			self.mark_as_watched()
 		self.reset()

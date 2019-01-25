@@ -6,7 +6,7 @@ def execute(f, iterable, stop_flag=None, workers=10):
 	Executor = ThreadPoolExecutor
 	with Executor(max_workers=workers) as executor:
 		for future in _batched_pool_runner(executor, workers, f, iterable):
-			if xbmc.abortRequested:
+			if xbmc.Monitor().abortRequested():
 				break
 			if stop_flag and stop_flag.isSet():
 				break

@@ -1,7 +1,6 @@
 import xbmcplugin
 from resources.lib import text
 from resources.lib import Trakt
-from resources.lib import nav_base
 from resources.lib import meta_info
 from resources.lib import playrandom
 from resources.lib import nav_movies

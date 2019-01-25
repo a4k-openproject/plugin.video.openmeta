@@ -174,7 +174,7 @@ class Lister:
 		result_files = []
 		keyboard_hint = None
 		for i, hint in enumerate(guidance):
-			if self.stop_flag.isSet() or xbmc.abortRequested:
+			if self.stop_flag.isSet() or xbmc.Monitor().abortRequested():
 				return [],[]
 			if not path:
 				break

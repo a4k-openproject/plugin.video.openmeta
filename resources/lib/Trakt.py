@@ -96,7 +96,7 @@ def trakt_get_device_token(device_codes):
 	pDialog.create(title, msg2 + str(device_codes['user_code']))
 	try:
 		time_passed = 0
-		while not xbmc.abortRequested and not pDialog.iscanceled() and time_passed < expires_in:            
+		while not xbmc.Monitor().abortRequested() and not pDialog.iscanceled() and time_passed < expires_in:            
 			try:
 				response = call_trakt('oauth/device/token', data=data, with_auth=False)
 			except requests.HTTPError as e:

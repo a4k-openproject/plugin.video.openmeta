@@ -17,7 +17,7 @@ def hide_busy():
 		xbmc.executebuiltin('Dialog.Close(busydialog)')
 
 def scan_library(path=None):
-	while not xbmc.abortRequested and (xbmc.getCondVisibility('Library.IsScanning') or xbmc.getCondVisibility('Window.IsActive(progressdialog)')):
+	while not xbmc.Monitor().abortRequested() and (xbmc.getCondVisibility('Library.IsScanning') or xbmc.getCondVisibility('Window.IsActive(progressdialog)')):
 		xbmc.sleep(1000)
 	xbmc.executebuiltin('UpdateLibrary(video)')
 

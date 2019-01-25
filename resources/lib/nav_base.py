@@ -1,4 +1,4 @@
-import os, sys, inspect
+import sys, inspect
 from resources.lib.xswift2 import plugin
 
 def get_genre_icon(genre_id):

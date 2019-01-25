@@ -1,5 +1,5 @@
 import json
-import xbmc, xbmcgui
+import xbmc
 from resources.lib import text
 from resources.lib import tools
 from resources.lib import Trakt
@@ -81,18 +81,18 @@ def on_play_video(players, params, trakt_ids=None):
 		return action_playmedia(link)
 	else:
 		if trakt_ids:
-			xbmcgui.Window(10000).setProperty('script.trakt.ids', json.dumps(trakt_ids))
+			plugin.setProperty('script.trakt.ids', json.dumps(trakt_ids))
 		return link
 	return None
 
 def resolve_player(player, lister, params):
 	results = []
 	for command_group in player.commands:  
-		if xbmc.abortRequested or not Lister().is_active():
+		if xbmc.Monitor().abortRequested() or not Lister().is_active():
 			return
 		command_group_results = []
 		for command in command_group:
-			if xbmc.abortRequested or not Lister().is_active():
+			if xbmc.Monitor().abortRequested() or not Lister().is_active():
 				return
 			lang = command.get('language', 'en')
 			if not lang in params:

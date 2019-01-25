@@ -16,7 +16,7 @@ def future(seconds):
 	return datetime.datetime.now() + datetime.timedelta(seconds=seconds)
 
 if __name__ == '__main__':
-	go_idle(1) # Temporary! If skin is loading widgets pointing to OpenMeta before the addon launches it's service, an error will occur.
+	go_idle(10)
 	if plugin.get_setting('total_setup_done', bool) == False:
 		xbmc.executebuiltin('RunPlugin(plugin://plugin.video.openmeta/setup/total)')
 		plugin.set_setting('total_setup_done', 'true')

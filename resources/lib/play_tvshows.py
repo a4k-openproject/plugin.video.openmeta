@@ -1,5 +1,5 @@
 import re, json, urllib, datetime
-import xbmc, xbmcgui
+import xbmc
 from resources.lib import text
 from resources.lib import meta_info
 from resources.lib import play_base
@@ -50,7 +50,7 @@ def play_episode(id, season, episode):
 		params[lang] = text.to_unicode(params[lang])
 	link = play_base.on_play_video(players, params, trakt_ids)
 	if link:
-		xbmcgui.Window(10000).setProperty('plugin.video.openmeta.data', json.dumps(
+		plugin.setProperty('plugin.video.openmeta.data', json.dumps(
 			{
 				'dbid': dbid,
 				'tvdb': id,
@@ -139,7 +139,7 @@ def tmdb_play_episode(id, season, episode):
 		params[lang] = text.to_unicode(params[lang])
 	link = play_base.on_play_video(players, params, trakt_ids)
 	if link:
-		xbmcgui.Window(10000).setProperty('plugin.video.openmeta.data', json.dumps(
+		plugin.setProperty('plugin.video.openmeta.data', json.dumps(
 			{
 				'dbid': dbid,
 				'tmdb': id,
@@ -236,7 +236,7 @@ def trakt_play_episode(id, season, episode):
 		params[lang] = text.to_unicode(params[lang])
 	link = play_base.on_play_video(players, params, trakt_ids)
 	if link:
-		xbmcgui.Window(10000).setProperty('plugin.video.openmeta.data', json.dumps(
+		plugin.setProperty('plugin.video.openmeta.data', json.dumps(
 			{
 				'dbid': dbid,
 				'trakt': id,
@@ -341,7 +341,7 @@ def tvmaze_play_episode(id, season, episode, title=None):
 		params[lang] = text.to_unicode(params[lang])
 	link = play_base.on_play_video(players, params, trakt_ids)
 	if link:
-		xbmcgui.Window(10000).setProperty('plugin.video.openmeta.data', json.dumps(
+		plugin.setProperty('plugin.video.openmeta.data', json.dumps(
 			{
 				'dbid': dbid,
 				'tvdb': trakt_ids['tvdb'],
@@ -361,17 +361,6 @@ def tvmaze_play_episode(id, season, episode, title=None):
 				'fanart': str(show_info['fanart'])
 			})
 
-def escape(str):
-	str = str.replace('&', '%26')
-	str = str.replace('<', '%3C')
-	str = str.replace('>', '%3E')
-	str = str.replace('"', '%22')
-	str = str.replace("'", '%27')
-	str = str.replace(';', '%3B')
-	str = str.replace(':', '%3A')
-
-	return str
-
 def get_episode_parameters(show, season, episode):
 	from resources.lib.TheMovieDB import Find
 	articles = ['a ', 'A ', 'An ', 'an ', 'The ', 'the ']
@@ -381,6 +370,7 @@ def get_episode_parameters(show, season, episode):
 	else:
 		return
 	episodes = 0
+	count = 0
 	for i in show.items():
 		episodes += len(i[1].items())
 		if i[0] != 0 and i[0] < (season -1):

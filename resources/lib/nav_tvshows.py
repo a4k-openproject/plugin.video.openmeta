@@ -1,5 +1,5 @@
 import os, time, _strptime
-import xbmc, xbmcgui, xbmcvfs, xbmcplugin
+import xbmc, xbmcvfs, xbmcplugin
 from resources.lib import text
 from resources.lib import Trakt
 from resources.lib import tools
@@ -233,7 +233,7 @@ def tv_add_to_library_parsed(id, player):
 	imdb = show['imdb_id']
 	library_folder = lib_tvshows.setup_library(plugin.get_setting('tv_library_folder', unicode))
 	if lib_tvshows.add_tvshow_to_library(library_folder, show, player):
-		xbmcgui.Window(10000).setProperty('plugin.video.openmeta.clean_library', 'true')
+		plugin.setProperty('plugin.video.openmeta.clean_library', 'true')
 	tools.scan_library(path=plugin.get_setting('tv_library_folder', unicode))
 
 @plugin.route('/tv/add_to_library/<id>')
@@ -243,7 +243,7 @@ def tv_add_to_library(id):
 	imdb = show['imdb_id']
 	library_folder = lib_tvshows.setup_library(plugin.get_setting('tv_library_folder', unicode))
 	if lib_tvshows.add_tvshow_to_library(library_folder, show):
-		xbmcgui.Window(10000).setProperty('plugin.video.openmeta.clean_library', 'true')
+		plugin.setProperty('plugin.video.openmeta.clean_library', 'true')
 	tools.scan_library(path=plugin.get_setting('tv_library_folder', unicode))
 
 def tv_add_all_to_library(items, noscan=False):
@@ -323,7 +323,7 @@ def list_tvshows(response):
 		if tvdb_show is not None:
 			info = build_tvshow_info(tvdb_show, tmdb_show)
 			items.append(make_tvshow_item(info))
-	if xbmc.abortRequested:
+	if xbmc.Monitor().abortRequested():
 		return
 	if 'page' in response:
 		page = response['page']
