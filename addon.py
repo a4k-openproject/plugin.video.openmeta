@@ -24,32 +24,41 @@ def open_settings():
 @plugin.route('/update_library')
 def update_library():
 	now = time.time()
-	is_syncing = plugin.getProperty('plugin.video.openmeta.syncing_library')
-	is_updating = plugin.getProperty('plugin.video.openmeta.updating_library')
+	is_syncing = plugin.getProperty('openmeta_syncing_library')
+	is_updating = plugin.getProperty('openmeta_updating_library')
 	if is_syncing and now - int(is_syncing) < 120:
 		plugin.log.debug('Skipping library sync')
 	else:
 		if plugin.get_setting('library_sync_collection', bool) == True:
 			try:
-				plugin.setProperty('plugin.video.openmeta.syncing_library', 'true')
+				plugin.setProperty('openmeta_syncing_library', int(now))
+				plugin.notify('OpenMeta', 'Syncing library', plugin.get_addon_icon(), 1000)
 				lib_tvshows.sync_trakt_collection()
 				lib_movies.sync_trakt_collection()
 			finally:
-				plugin.clearProperty('plugin.video.openmeta.syncing_library')
-		else:
-			plugin.clearProperty('plugin.video.openmeta.syncing_library')
+				plugin.clearProperty('openmeta_syncing_library')
 	if is_updating and now - int(is_updating) < 120:
 		plugin.log.debug('Skipping library update')
 		return
 	else:
 		if plugin.get_setting('library_updates', bool) == True:
 			try:
-				plugin.setProperty('plugin.video.openmeta.updating_library', 'true')
+				plugin.setProperty('openmeta_updating_library', int(now))
+				plugin.notify('OpenMeta', 'Updating library', plugin.get_addon_icon(), 1000)
 				lib_tvshows.update_library()
 			finally:
-				plugin.clearProperty('plugin.video.openmeta.updating_library')
-		else:
-			plugin.clearProperty('plugin.video.openmeta.updating_library')
+				plugin.clearProperty('openmeta_updating_library')
+
+@plugin.route('/update_library_from_settings')
+def update_library_from_settings():
+	now = time.time()
+	if plugin.yesno('OpenMeta', 'Would you like to update the library now?'):
+		try:
+			plugin.setProperty('openmeta_updating_library', int(now))
+			plugin.notify('OpenMeta', 'Updating library', plugin.get_addon_icon(), 500)
+			lib_tvshows.update_library()
+		finally:
+			plugin.clearProperty('openmeta_updating_library')
 
 @plugin.route('/update_players')
 @plugin.route('/update_players/<url>', name='players_update_url')
@@ -71,7 +80,7 @@ def total_setup():
 
 @plugin.route('/setup/silent')
 def silent_setup():
-	plugin.setProperty('plugin.video.openmeta.totalopenmeta', 'true')
+	plugin.setProperty('totalopenmeta', 'true')
 	movielibraryfolder = plugin.get_setting('movies_library_folder', unicode)
 	tvlibraryfolder = plugin.get_setting('tv_library_folder', unicode)
 	try:
@@ -79,12 +88,12 @@ def silent_setup():
 		lib_tvshows.auto_tvshows_setup(tvlibraryfolder)
 	except:
 		pass
-	plugin.clearProperty('plugin.video.openmeta.totalopenmeta')
+	plugin.clearProperty('totalopenmeta')
 
 
 @plugin.route('/setup/players')
 def players_setup():
-	plugin.setProperty('plugin.video.openmeta.running', 'totalopenmeta')
+	plugin.setProperty('openmeta_players_setup', 'true')
 	url = plugin.get_setting('players_update_url', unicode)
 	if url == '':
 		if plugin.yesno('OpenMeta players setup', 'Would you like to set a URL for players now?'):
@@ -95,7 +104,7 @@ def players_setup():
 		plugin.notify('OpenMeta players setup', 'Done', plugin.get_addon_icon(), 3000)
 	else:
 		plugin.notify('OpenMeta players setup', 'Failed', plugin.get_addon_icon(), 3000)
-	plugin.clearProperty('plugin.video.openmeta.running')
+	plugin.clearProperty('openmeta_players_setup')
 	return True
 
 @plugin.route('/setup/sources')

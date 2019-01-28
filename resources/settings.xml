@@ -8,7 +8,7 @@
 		<setting label="Total setup Done" id="total_setup_done" type="bool" default="false" visible="false"/>
 		<setting label="Library" type="lsep"/>
 		<setting label="Enable library updates?" id="library_updates" type="bool" default="true"/>
-		<setting label="Force library update..." type="action" subsetting="true" action="RunPlugin(plugin://plugin.video.openmeta/update_library)" visible="eq(-1,true)"/>
+		<setting label="Force library update..." type="action" subsetting="true" action="RunPlugin(plugin://plugin.video.openmeta/update_library_from_settings)" visible="eq(-1,true)"/>
 		<setting label="Movies library folder" id="movies_library_folder" type="folder" default="special://profile/addon_data/plugin.video.openmeta/Movies/"/>
 		<setting label="TV Shows library folder" id="tv_library_folder" type="folder" default="special://profile/addon_data/plugin.video.openmeta/TVShows/"/>
         <setting label="Movies Batch Add File Path" id="movies_batch_add_file_path" type="text" default="special://profile/addon_data/plugin.video.openmeta/movies_to_add.txt" visible="false"/>
