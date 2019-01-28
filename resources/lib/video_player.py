@@ -42,10 +42,18 @@ class VideoPlayer(xbmc.Player):
 		return None
 
 	def onPlayBackStarted(self):
-		self.reset()
-		if self.isPlayingVideo():
-			self.id = self.currently_playing()
-			self.totalTime = self.getTotalTime()
+		if int(xbmc.getInfoLabel('System.BuildVersion')[:2]) < 18:
+			self.reset()
+			if self.isPlayingVideo():
+				self.id = self.currently_playing()
+				self.totalTime = self.getTotalTime()
+
+	def onAVStarted(self):
+		if int(xbmc.getInfoLabel('System.BuildVersion')[:2]) > 17:
+			self.reset()
+			if self.isPlayingVideo():
+				self.id = self.currently_playing()
+				self.totalTime = self.getTotalTime()
 
 	def onPlayBackEnded(self):
 		plugin.clearProperty('script.trakt.ids')
