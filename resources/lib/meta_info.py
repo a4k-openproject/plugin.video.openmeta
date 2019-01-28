@@ -96,7 +96,10 @@ def get_tvshow_metadata_trakt(show, genres_dict=None):
 	info['poster'] = images[0]
 	info['fanart'] = images[1]
 	if genres_dict:
-		info['genre'] = u' / '.join([genres_dict[x] for x in show['genres']])
+		try:
+			info['genre'] = u' / '.join([genres_dict[x] for x in show['genres']])
+		except:
+			pass
 	if show.get('trailer'):
 		info['trailer'] = make_trailer(show['trailer'])
 	return info
