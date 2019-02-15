@@ -16,8 +16,8 @@ def update_library():
 	tools.scan_library(path=plugin.get_setting('movies_library_folder', unicode))
 
 def sync_trakt_collection():
-	from resources.lib import lists
-	lists.lists_trakt_movies_collection_to_library()
+	from resources.lib import nav_movies
+	nav_movies.lists_trakt_movies_collection_to_library()
 
 def add_movie_to_library(library_folder, src, id):
 	changed = False

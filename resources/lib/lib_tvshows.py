@@ -33,8 +33,8 @@ def update_library():
 		tools.scan_library(path=plugin.get_setting('tv_library_folder', unicode))
 
 def sync_trakt_collection():
-	from resources.lib import lists
-	lists.lists_trakt_tv_collection_to_library()
+	from resources.lib import nav_tvshows
+	nav_tvshows.lists_trakt_tv_collection_to_library()
 
 def add_tvshow_to_library(library_folder, show):
 	clean_needed = False
