@@ -14,7 +14,7 @@ def play_movie(tmdb_id):
 		xbmc.executebuiltin('Action(Info)')
 		play_base.action_cancel()
 		return
-	movie = Movies(tmdb_id).info(language='en', append_to_response='external_ids,alternative_titles,credits,images,keywords,releases,videos,translations,similar,reviews,lists,rating')
+	movie = Movies(tmdb_id).info(language='en', append_to_response='external_ids,alternative_titles,credits,images,keywords,releases,translations,rating')
 	movie_info = meta_info.get_movie_metadata(movie)
 	trakt_ids = play_base.get_trakt_ids('tmdb', tmdb_id, movie['original_title'], 'movie', text.parse_year(movie['release_date']))
 	params = {}
@@ -22,7 +22,7 @@ def play_movie(tmdb_id):
 		if lang == 'en':
 			tmdb_data = movie
 		else:
-			tmdb_data = Movies(tmdb_id).info(language=lang, append_to_response='external_ids,alternative_titles,credits,images,keywords,releases,videos,translations,similar,reviews,lists,rating')
+			tmdb_data = Movies(tmdb_id).info(language=lang, append_to_response='external_ids,alternative_titles,credits,images,keywords,releases,translations,rating')
 		params[lang] = get_movie_parameters(tmdb_data)
 		if trakt_ids != None:
 			params[lang].update(trakt_ids)
@@ -40,7 +40,7 @@ def play_movie(tmdb_id):
 				'info_type': 'video',
 				'thumbnail': movie_info['poster'],
 				'poster': movie_info['poster'],
-				'properties': {'fanart_image': movie_info['fanart']}
+				'fanart': movie_info['fanart']
 			})
 
 def get_movie_parameters(movie):
@@ -51,7 +51,7 @@ def get_movie_parameters(movie):
 	parameters['released'] = movie['release_date']
 	parameters['id'] = movie['id']
 	parameters['imdb'] = movie['imdb_id']
-	parameters['title'] = movie['title'].replace('&', '%26')
+	parameters['title'] = text.escape(movie['title'])
 	parameters['striptitle'] = ' '.join(re.compile('[\W_]+').sub(' ', movie['title']).split())
 	parameters['urltitle'] = urllib.quote(text.to_utf8(parameters['title']))
 	parameters['sorttitle'] = text.to_utf8(parameters['title'])
@@ -66,7 +66,7 @@ def get_movie_parameters(movie):
 		parameters['sortesttitle'] = str(parameters['sorttitle']).lower().replace(' movi', '')
 	else:
 		parameters['sortesttitle'] = parameters['sorttitle']
-	parameters['original_title'] = movie['original_title'].replace('&', '%26')
+	parameters['original_title'] = text.escape(movie['original_title'])
 	parameters['name'] = u'%s (%s)' % (parameters['title'], parameters['year'])
 	parameters['urlname'] = urllib.quote(text.to_utf8(parameters['name']))
 	parameters['released'] = movie['release_date']
@@ -119,8 +119,8 @@ def get_movie_parameters(movie):
 	else:
 		parameters['mpaa'] = ''
 	parameters['duration'] = int(parameters['runtime']) * 60
-	parameters['plot'] = movie['overview'].replace(':','').replace(';', '').replace('"', '')
-	parameters['tagline'] = movie['tagline'].replace(':','').replace(';', '').replace('"', '')
+	parameters['plot'] = text.escape(movie['overview'])
+	parameters['tagline'] = text.escape(movie['tagline'])
 	if 'https://image.tmdb.org/t/p/w300%s' % str(movie['poster_path']):
 		parameters['poster'] = 'https://image.tmdb.org/t/p/w300%s' % str(movie['poster_path'])
 	else:

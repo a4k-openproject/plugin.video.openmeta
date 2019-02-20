@@ -2,16 +2,13 @@ import os, shutil
 import xbmc, xbmcvfs
 from resources.lib import text
 from resources.lib import tools
-from resources.lib import dialogs
-from resources.lib import nav_base
-from resources.lib import properties
 from resources.lib.rpc import RPC
 from resources.lib.TheTVDB import TVDB
 from resources.lib.xswift2 import plugin
-from resources.lib.settings import SETTING_TV_LIBRARY_FOLDER
+
 
 def update_library():
-	folder_path = plugin.get_setting(SETTING_TV_LIBRARY_FOLDER, unicode)
+	folder_path = plugin.get_setting('tv_library_folder', unicode)
 	if not xbmcvfs.exists(folder_path):
 		return
 	library_folder = setup_library(folder_path)
@@ -31,13 +28,13 @@ def update_library():
 			continue
 		updated += 1
 	if clean_needed:
-		properties.set_property('clean_library', 1)
+		plugin.setProperty('plugin.video.openmeta.clean_library', 'true')
 	if updated > 0:
-		tools.scan_library(path=plugin.get_setting(SETTING_TV_LIBRARY_FOLDER, unicode))
+		tools.scan_library(path=plugin.get_setting('tv_library_folder', unicode))
 
 def sync_trakt_collection():
-	from resources.lib import lists
-	lists.lists_trakt_tv_collection_to_library()
+	from resources.lib import nav_tvshows
+	nav_tvshows.lists_trakt_tv_collection_to_library()
 
 def add_tvshow_to_library(library_folder, show):
 	clean_needed = False
@@ -115,7 +112,7 @@ def library_tv_remove_strm(show, folder, id, season, episode):
 	stream_file = os.path.join(season_folder, enc_name + '.strm')
 	if xbmcvfs.exists(stream_file):
 		xbmcvfs.delete(stream_file)
-		while not xbmc.abortRequested and xbmcvfs.exists(stream_file):
+		while not xbmc.Monitor().abortRequested() and xbmcvfs.exists(stream_file):
 			xbmc.sleep(1000)
 		a,b = xbmcvfs.listdir(season_folder)
 		if not a and not b:
@@ -144,9 +141,9 @@ def setup_library(library_folder):
 	if not xbmcvfs.exists(library_folder):
 		xbmcvfs.mkdir(library_folder)
 		msg = 'Would you like to automatically set OpenMeta as a tv shows source?'
-		if dialogs.yesno('Library setup', msg):
+		if plugin.yesno('Library setup', msg):
 			try:
-				source_thumbnail = nav_base.get_icon_path('tv')
+				source_thumbnail = plugin.get_media_icon('tv')
 				source_name = 'OpenMeta TV shows'
 				source_content = "('%s','tvshows','metadata.tvdb.com','',0,0,'<settings version=\"2\"><setting id=\"absolutenumber\" default=\"true\">false</setting><setting id=\"alsoimdb\">true</setting><setting id=\"dvdorder\" default=\"true\">false</setting><setting id=\"fallback\">true</setting><setting id=\"fallbacklanguage\">es</setting><setting id=\"fanart\">true</setting><setting id=\"language\" default=\"true\">en</setting><setting id=\"RatingS\" default=\"true\">TheTVDB</setting><setting id=\"usefallbacklanguage1\">true</setting></settings>',0,0,NULL,NULL)" % library_folder
 				tools.add_source(source_name, library_folder, source_content, source_thumbnail)
@@ -158,7 +155,7 @@ def auto_tvshows_setup(library_folder):
 	if library_folder[-1] != '/': library_folder += '/'
 	try:
 		xbmcvfs.mkdir(library_folder)
-		source_thumbnail = nav_base.get_icon_path('tv')
+		source_thumbnail = plugin.get_media_icon('tv')
 		source_name = 'OpenMeta TV shows'
 		source_content = "('%s','tvshows','metadata.tvdb.com','',0,0,'<settings version=\"2\"><setting id=\"absolutenumber\" default=\"true\">false</setting><setting id=\"alsoimdb\">true</setting><setting id=\"dvdorder\" default=\"true\">false</setting><setting id=\"fallback\">true</setting><setting id=\"fallbacklanguage\">es</setting><setting id=\"fanart\">true</setting><setting id=\"language\" default=\"true\">en</setting><setting id=\"RatingS\" default=\"true\">TheTVDB</setting><setting id=\"usefallbacklanguage1\">true</setting></settings>',0,0,NULL,NULL)" % library_folder
 		tools.add_source(source_name, library_folder, source_content, source_thumbnail)

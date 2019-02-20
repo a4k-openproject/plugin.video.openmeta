@@ -1,8 +1,7 @@
 import os, json, requests, requests_cache
 from resources.lib.xswift2 import plugin
-from resources.lib import settings
 
-ext_key = plugin.get_setting(settings.SETTING_TMDB_API, str)
+ext_key = plugin.get_setting('tmdb_api', str)
 
 if len(ext_key) == 32:
 	API_key = ext_key

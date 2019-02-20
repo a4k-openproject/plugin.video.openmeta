@@ -1,21 +1,17 @@
-import os, time
+import os, time, _strptime
 import xbmc, xbmcvfs, xbmcplugin
 from resources.lib import text
 from resources.lib import Trakt
 from resources.lib import tools
-from resources.lib import dialogs
 from resources.lib import executor
-from resources.lib import settings
 from resources.lib import nav_base
 from resources.lib import meta_info
-from resources.lib import properties
 from resources.lib import lib_tvshows
 from resources.lib import play_tvshows
 from resources.lib.TheTVDB import TVDB
 from resources.lib.xswift2 import plugin
 
-ICON = nav_base.get_meta_icon_path()
-FANART = nav_base.get_background_path()
+
 SORT = [
 	xbmcplugin.SORT_METHOD_UNSORTED,
 	xbmcplugin.SORT_METHOD_LABEL,
@@ -33,82 +29,89 @@ SORTRAKT = [
 	xbmcplugin.SORT_METHOD_DURATION,
 	xbmcplugin.SORT_METHOD_MPAA_RATING]
 
-@plugin.route('/tv')
-def tv():
-	items = [
-		{
-			'label': 'Genres (TMDb)',
-			'path': plugin.url_for('tmdb_tv_genres'),
-			'icon': nav_base.get_icon_path('genres'),
-			'thumbnail': nav_base.get_icon_path('genres')
-		},
-		{
-			'label': 'On the air (TMDb)',
-			'path': plugin.url_for('tmdb_tv_now_playing', page=1),
-			'icon': nav_base.get_icon_path('ontheair'),
-			'thumbnail': nav_base.get_icon_path('ontheair')
-		},
-		{
-			'label': 'Popular (TMDb)',
-			'path': plugin.url_for('tmdb_tv_most_popular', page=1),
-			'icon': nav_base.get_icon_path('popular'),
-			'thumbnail': nav_base.get_icon_path('popular')
-		},
-		{
-			'label': 'Top rated (TMDb)',
-			'path': plugin.url_for('tmdb_tv_top_rated', page=1),
-			'icon': nav_base.get_icon_path('top_rated'),
-			'thumbnail': nav_base.get_icon_path('top_rated')
-		},
-		{
-			'label': 'Most watched (Trakt)',
-			'path': plugin.url_for('trakt_tv_watched', page=1),
-			'icon': nav_base.get_icon_path('traktwatchlist'),
-			'thumbnail': nav_base.get_icon_path('traktwatchlist')
-		},
-		{
-			'label': 'Most collected (Trakt)',
-			'path': plugin.url_for('trakt_tv_collected', page=1),
-			'icon': nav_base.get_icon_path('traktcollection'),
-			'thumbnail': nav_base.get_icon_path('traktcollection')
-		},
-		{
-			'label': 'Popular (Trakt)',
-			'path': plugin.url_for('tv_trakt_popular', page=1),
-			'icon': nav_base.get_icon_path('traktrecommendations'),
-			'thumbnail': nav_base.get_icon_path('traktrecommendations')
-		},
-		{
-			'label': 'Trending (Trakt)',
-			'path': plugin.url_for('trakt_tv_trending', page=1),
-			'icon': nav_base.get_icon_path('trending'),
-			'thumbnail': nav_base.get_icon_path('trending')
-		},
-		{
-			'label': 'Search tv shows',
-			'path': plugin.url_for('tv_search'),
-			'icon': nav_base.get_icon_path('search'),
-			'thumbnail': nav_base.get_icon_path('search')
-		}]
-	for item in items:
-		item['properties'] = {'fanart_image': FANART}
+def list_trakt_tvshows(results, pages, page):
+	genres_dict = dict([(x['slug'], x['name']) for x in Trakt.get_genres('shows')])
+	shows = [meta_info.get_tvshow_metadata_trakt(item['show'], genres_dict) for item in results]
+	items = [make_tvshow_item(show) for show in shows if show.get('tvdb_id')]
+	page = int(page)
+	pages = int(pages)
+	if pages > 1:
+		args = nav_base.caller_args()
+		args['page'] = page + 1
+		args['confirm'] = 'yes'
+		items.append(
+			{
+				'label': '%s/%s  [I]Next page[/I]  >>' % (page + 1, pages + 1),
+				'path': plugin.url_for(nav_base.caller_name(), **args),
+				'thumbnail': plugin.get_media_icon('item_next'),
+				'fanart': plugin.get_addon_fanart()
+			})
+	return plugin.finish(items=items, sort_methods=SORT)
+
+@plugin.route('/tv/trakt_watched/<page>')
+def trakt_tv_watched(page, raw=False):
+	results, pages = Trakt.get_watched_shows_paginated(page)
+	if raw:
+		return results
+	else:
+		return list_trakt_tvshows(results, pages, page)
+
+@plugin.route('/tv/trakt_netflix_collected/<page>')
+def trakt_netflix_tv_collected(page, raw=False):
+	results, pages = Trakt.get_netflix_collected_shows(page)
+	if raw:
+		return results
+	else:
+		return list_trakt_tvshows(results, pages, page)
+
+@plugin.route('/tv/trakt_collected/<page>')
+def trakt_tv_collected(page, raw=False):
+	results, pages = Trakt.get_collected_shows_paginated(page)
+	if raw:
+		return results
+	else:
+		return list_trakt_tvshows(results, pages, page)
+
+@plugin.route('/tv/trakt_popular/<page>')
+def tv_trakt_popular(page, raw=False):
+	results, pages = Trakt.get_popular_shows_paginated(page)
+	if raw:
+		return results
+	else:
+		genres_dict = dict([(x['slug'], x['name']) for x in Trakt.get_genres('shows')])
+		shows = [meta_info.get_tvshow_metadata_trakt(item, genres_dict) for item in results]
+		items = [make_tvshow_item(show) for show in shows if show.get('tvdb_id')]
+		page = int(page)
+		pages = int(pages)
+		if pages > 1:
+			items.append(
+				{
+					'label': '%s/%s  [I]Next page[/I]  >>' % (page + 1, pages + 1),
+					'path': plugin.url_for('tv_trakt_popular', page=page + 1),
+					'thumbnail': plugin.get_media_icon('item_next'),
+					'fanart': plugin.get_addon_fanart()
+				})
+		return plugin.finish(items=items, sort_methods=SORT)
+
+@plugin.route('/tv/trakt_trending/<page>')
+def trakt_tv_trending(page, raw=False):
+	results, pages = Trakt.get_trending_shows_paginated(page)
+	if raw:
+		return results
+	else:
+		list_trakt_tvshows(results, pages, page)
+
+@plugin.route('/tv/tvdb_search_term/<term>/<page>')
+def tvdb_tv_search_term(term, page):
+	search_results = TVDB.search(term, language='en')
+	items = []
+	load_full_tvshow = lambda tvshow : TVDB.get_show(tvshow['id'], full=True)
+	for tvdb_show in executor.execute(load_full_tvshow, search_results, workers=10):
+		info = build_tvshow_info(tvdb_show)
+		items.append(make_tvshow_item(info))
 	return items
 
-@plugin.route('/tv/trakt/search')
-def trakt_tv_search():
-	term = plugin.keyboard(heading='Enter search string')
-	if term != None and term != '':
-		return trakt_tv_search_term(term, 1)
-	else:
-		return
-
-@plugin.route('/tv/trakt/search_term/<term>/<page>')
-def trakt_tv_search_term(term, page):
-	results, pages = Trakt.search_for_tvshow_paginated(term, page)
-	return list_trakt_search_items(results, pages, page)
-
 def list_trakt_search_items(results, pages, page):
-	plugin.set_content('tvshows')
 	shows = [meta_info.get_tvshow_metadata_trakt(item['show'], None) for item in results]
 	items = [make_tvshow_item(show) for show in shows if show.get('tvdb_id')]
 	page = int(page)
@@ -120,207 +123,31 @@ def list_trakt_search_items(results, pages, page):
 		items.append(
 			{
 				'label': '%s/%s  [I]Next page[/I]  >>' % (nextpage, pages),
-				'icon': nav_base.get_icon_path('item_next'),
 				'path': plugin.url_for(nav_base.caller_name(), **args),
-				'properties': {'fanart_image': FANART}
+				'thumbnail': plugin.get_media_icon('item_next'),
+				'fanart': plugin.get_addon_fanart()
 			})
-	return plugin.finish(items=items)
-
-def list_trakt_tvshows(results, pages, page):
-	plugin.set_content('tvshows')
-	genres_dict = trakt_get_genres()
-	shows = [meta_info.get_tvshow_metadata_trakt(item['show'], genres_dict) for item in results]
-	items = [make_tvshow_item(show) for show in shows if show.get('tvdb_id')]
-	page = int(page)
-	pages = int(pages)
-	if pages > 1:
-		args = nav_base.caller_args()
-		args['page'] = page + 1
-		args['confirm'] = 'yes'
-		items.append(
-			{
-				'label': '%s/%s  [I]Next page[/I]  >>' % (page, pages + 1),
-				'icon': nav_base.get_icon_path('item_next'),
-				'path': plugin.url_for(nav_base.caller_name(), **args),
-				'properties': {'fanart_image': FANART}
-			})
-	return plugin.finish(items=items, sort_methods=SORT)
-
-@plugin.route('/tv/trakt/watched/<page>')
-def trakt_tv_watched(page, raw=False):
-	results, total_items = Trakt.trakt_get_watched_shows_paginated(page)
-	if raw:
-		return results
-	else:
-		return list_trakt_tvshows_watched_paginated(results, total_items, page)
-
-def list_trakt_tvshows_watched_paginated(results, total_items, page):
-	plugin.set_content('tvshows')
-	genres_dict = trakt_get_genres()
-	shows = [meta_info.get_tvshow_metadata_trakt(item['show'], genres_dict) for item in results]
-	items = [make_tvshow_item(show) for show in shows if show.get('tvdb_id')]
-	nextpage = int(page) + 1
-	pages = int(total_items) // 99 + (int(total_items) % 99 > 0)
-	if int(pages) > int(page):
-		items.append(
-			{
-				'label': '%s/%s  [I]Next page[/I]  >>' % (nextpage, pages),
-				'icon': nav_base.get_icon_path('item_next'),
-				'path': plugin.url_for('trakt_tv_watched', page=int(page) + 1),
-				'properties': {'fanart_image': FANART}
-			})
-	return plugin.finish(items=items, sort_methods=SORT)
-
-@plugin.route('/tv/trakt/collected/<page>')
-def trakt_tv_collected(page, raw=False):
-	results, total_items = Trakt.trakt_get_collected_shows_paginated(page)
-	if raw:
-		return results
-	else:
-		return list_trakt_tvshows_watched_paginated(results, total_items, page)
-
-def list_trakt_tvshows_collected_paginated(results, total_items, page):
-	plugin.set_content('tvshows')
-	genres_dict = trakt_get_genres()
-	shows = [meta_info.get_tvshow_metadata_trakt(item['show'], genres_dict) for item in results]
-	items = [make_tvshow_item(show) for show in shows if show.get('tvdb_id')]
-	nextpage = int(page) + 1
-	pages = int(total_items) // 99 + (int(total_items) % 99 > 0)
-	if int(pages) > int(page):
-		items.append(
-			{
-				'label': '%s/%s  [I]Next page[/I]  >>' % (nextpage, pages),
-				'icon': nav_base.get_icon_path('item_next'),
-				'path': plugin.url_for('trakt_tv_collected', page=int(page) + 1),
-				'properties': {'fanart_image': FANART}
-			})
-	return plugin.finish(items=items, sort_methods=SORT)
-
-@plugin.route('/tv/trakt/popular/<page>')
-def tv_trakt_popular(page, raw=False):
-	results, pages = Trakt.trakt_get_popular_shows_paginated(page)
-	if raw:
-		return results
-	else:
-		return list_trakt_tvshows_popular_paginated(results, pages, page)
-
-def list_trakt_tvshows_popular_paginated(results, pages, page):
-	plugin.set_content('tvshows')
-	genres_dict = trakt_get_genres()
-	shows = [meta_info.get_tvshow_metadata_trakt(item, genres_dict) for item in results]
-	items = [make_tvshow_item(show) for show in shows if show.get('tvdb_id')]
-	nextpage = int(page) + 1
-	if pages > page:
-		items.append(
-			{
-				'label': '%s/%s  [I]Next page[/I]  >>' % (nextpage, pages),
-				'icon': nav_base.get_icon_path('item_next'),
-				'path': plugin.url_for('tv_trakt_popular', page=int(page) + 1),
-				'properties': {'fanart_image': FANART}
-			})
-	return plugin.finish(items=items, sort_methods=SORT)
-
-@plugin.route('/tv/trakt/trending/<page>')
-def trakt_tv_trending(page, raw=False):
-	results, pages = Trakt.trakt_get_trending_shows_paginated(page)
-	if raw:
-		return results
-	else:
-		list_trakt_tvshows_trending_paginated(results, pages, page)
-
-def list_trakt_tvshows_trending_paginated(results, pages, page):
-	plugin.set_content('tvshows')
-	genres_dict = trakt_get_genres()
-	shows = [meta_info.get_tvshow_metadata_trakt(item['show'], genres_dict) for item in results]
-	items = [make_tvshow_item(show) for show in shows if show.get('tvdb_id')]
-	nextpage = int(page) + 1
-	if pages > page:
-		items.append(
-			{
-				'label': '%s/%s  [I]Next page[/I]  >>' % (nextpage, pages),
-				'icon': nav_base.get_icon_path('item_next'),
-				'path': plugin.url_for('trakt_tv_trending', page=int(page) + 1),
-				'properties': {'fanart_image': FANART}
-			})
-	return plugin.finish(items=items, sort_methods=SORT)
-
-@plugin.route('/tv/search')
-def tv_search():
-	term = plugin.keyboard(heading='Enter search string')
-	if term != None and term != '':
-		return tv_search_term(term, 1)
-	else:
-		return
-
-@plugin.route('/tv/search/edit/<term>')
-def tv_search_edit(term):
-	term = plugin.keyboard(default=term, heading='Enter search string')
-	if term != None and term != '':
-		return tv_search_term(term, 1)
-	else:
-		return
-
-@plugin.route('/tv/search_term/<term>/<page>')
-def tv_search_term(term, page):
-	items = [
-		{
-			'label': '(TMDb) Search - %s' % term,
-			'path': plugin.url_for('tmdb_tv_search_term', term=term, page=1),
-			'icon': nav_base.get_icon_path('tv'),
-			'thumbnail': nav_base.get_icon_path('tv')},
-		{
-			'label': '(TVDb) Search - %s' % term,
-			'path': plugin.url_for('tvdb_tv_search_term', term=term, page=1),
-			'icon': nav_base.get_icon_path('tv'),
-			'thumbnail': nav_base.get_icon_path('tv')},
-		{
-			'label': '(Trakt) Search - %s' % term,
-			'path': plugin.url_for('trakt_tv_search_term', term=term, page=1),
-			'icon': nav_base.get_icon_path('tv'),
-			'thumbnail': nav_base.get_icon_path('tv')},
-		{
-			'label': 'Edit search string',
-			'path': plugin.url_for('tv_search_edit', term=term),
-			'icon': nav_base.get_icon_path('search'),
-			'thumbnail': nav_base.get_icon_path('search')
-		}]
-	for item in items:
-		item['properties'] = {'fanart_image': FANART}
 	return items
 
-@plugin.route('/tv/tmdb/search')
-def tmdb_tv_search():
-	term = plugin.keyboard(heading='Enter search string')
-	if term != None and term != '':
-		return tmdb_tv_search_term(term, 1)
-	else:
-		return
+@plugin.route('/tv/trakt_search_term/<term>/<page>')
+def trakt_tv_search_term(term, page):
+	results, pages = Trakt.search_for_tvshow_paginated(term, page)
+	return list_trakt_search_items(results, pages, page)
 
-@plugin.route('/tv/tmdb/search_term/<term>/<page>')
-def tmdb_tv_search_term(term, page):
-	plugin.set_content('tvshows')
-	from resources.lib.TheMovieDB import Search
-	result = Search().tv(query=term, language='en', page=page)
-	items = list_tvshows(result)
-	return plugin.finish(items=items, sort_methods=SORT)
-
-@plugin.cached_route('/tv/tmdb/genres', TTL=60)
+@plugin.cached_route('/tv_genres', TTL=60)
 def tmdb_tv_genres():
-	plugin.set_content('genres')
 	genres = nav_base.get_tv_genres()
 	items = sorted([
 		{
 			'label': name,
-			'icon': nav_base.get_genre_icon(id),
-			'path': plugin.url_for('tmdb_tv_genre', id=id, page=1)
+			'path': plugin.url_for('tmdb_tv_genre', id=id, page=1),
+			'thumbnail': nav_base.get_genre_icon(id),
+			'fanart': plugin.get_addon_fanart()
 		} for id, name in genres.items()], key=lambda k: k['label'])
-	for item in items:
-		item['properties'] = {'fanart_image': FANART}
 	return items
 
 @plugin.cached_route('/tv/genre/<id>/<page>', TTL=60)
 def tmdb_tv_genre(id, page, raw=False):
-	plugin.set_content('tvshows')
 	from resources.lib.TheMovieDB import Discover
 	result = Discover().tv(with_genres=id, page=page, language='en')
 	if raw:
@@ -328,9 +155,8 @@ def tmdb_tv_genre(id, page, raw=False):
 	else:
 		return list_tvshows(result)
 
-@plugin.cached_route('/tv/tmdb/now_playing/<page>', TTL=60)
-def tmdb_tv_now_playing(page, raw=False):
-	plugin.set_content('tvshows')
+@plugin.cached_route('/tv/tmdb_now_playing/<page>', TTL=60)
+def tmdb_tv_on_the_air(page, raw=False):
 	from resources.lib.TheMovieDB import TV
 	result = TV().on_the_air(page=page, language='en')
 	if raw:
@@ -338,9 +164,8 @@ def tmdb_tv_now_playing(page, raw=False):
 	else:
 		return list_tvshows(result)
 
-@plugin.cached_route('/tv/tmdb/most_popular/<page>', TTL=60)
+@plugin.cached_route('/tv/tmdb_most_popular/<page>', TTL=60)
 def tmdb_tv_most_popular(page, raw=False):
-	plugin.set_content('tvshows')
 	from resources.lib.TheMovieDB import TV
 	result = TV().popular(page=page, language='en')
 	if raw:
@@ -348,41 +173,12 @@ def tmdb_tv_most_popular(page, raw=False):
 	else:
 		return list_tvshows(result)
 
-@plugin.cached_route('/tv/tmdb/top_rated/<page>', TTL=60)
-def tmdb_tv_top_rated(page, raw=False):
-	plugin.set_content('tvshows')
-	from resources.lib.TheMovieDB import TV
-	result = TV().top_rated(page=page, language='en')
-	if raw:
-		return result
-	else:
-		return list_tvshows(result)
-
-@plugin.route('/tv/tvdb/search')
-def tvdb_tv_search():
-	term = plugin.keyboard(heading='Enter search string')
-	if term != None and term != '':
-		return tvdb_tv_search_term(term, 1)
-	else:
-		return
-
-@plugin.route('/tv/tvdb/search_term/<term>/<page>')
-def tvdb_tv_search_term(term, page):
-	plugin.set_content('tvshows')
-	search_results = TVDB.search(term, language='en')
-	items = []
-	load_full_tvshow = lambda tvshow : TVDB.get_show(tvshow['id'], full=True)
-	for tvdb_show in executor.execute(load_full_tvshow, search_results, workers=10):
-		info = build_tvshow_info(tvdb_show)
-		items.append(make_tvshow_item(info))
-	return items
-
 def get_tvdb_id_from_name(name, lang):
+	tools.show_busy()
 	search_results = TVDB.search(name, language=lang)
 	if not search_results:
-		header = 'TV show not found'
-		dialogs.ok(header, 'no show information found for %s in tvdb' % text.to_utf8(name))
-		return
+		tools.hide_busy()
+		plugin.ok('TV show not found', 'no show information found for %s in tvdb' % text.to_utf8(name))
 	items = []
 	for show in search_results:
 		if 'firstaired' in show:
@@ -391,40 +187,18 @@ def get_tvdb_id_from_name(name, lang):
 			show['year'] = 'unknown'
 		items.append(show)
 	if len(items) > 1:
-		selection = dialogs.select('Choose TV Show', ['%s (%s)' % (text.to_utf8(s['seriesname']), s['year']) for s in items])
+		selection = plugin.select('Choose TV Show', ['%s (%s)' % (text.to_utf8(s['seriesname']), s['year']) for s in items])
 	else:
 		selection = 0
+	tools.hide_busy()
 	if selection != -1:
 		return items[selection]['id']
 
 def get_tvdb_id_from_imdb_id(imdb_id):
 	tvdb_id = TVDB.search_by_imdb(imdb_id)
 	if not tvdb_id:
-		header = 'TV show not found'
-		dialogs.ok(header, 'no show information found for %s in tvdb' % imdb_id)
-		return
+		plugin.ok('TV show not found', 'no show information found for %s in tvdb' % imdb_id)
 	return tvdb_id
-
-@plugin.route('/tv/trakt/updated/<page>')
-def tv_trakt_updated(page):
-	results, pages = Trakt.trakt_updated_shows(page)
-	return list_trakt_tvshows_trending_paginated(results, pages, page)
-
-def list_trakt_tvshows_updated_paginated(results, pages, page):
-	plugin.set_content('tvshows')
-	genres_dict = trakt_get_genres()
-	shows = [meta_info.get_tvshow_metadata_trakt(item['show'], genres_dict) for item in results]
-	items = [make_tvshow_item(show) for show in shows if show.get('tvdb_id')]
-	nextpage = int(page) + 1
-	if pages > page:
-		items.append(
-			{
-				'label': '%s/%s  [I]Next page[/I]  >>' % (nextpage, pages),
-				'icon': nav_base.get_icon_path('item_next'),
-				'path': plugin.url_for('tv_trakt_updated', page=int(page) + 1),
-				'properties': {'fanart_image': FANART}
-			})
-	return items
 
 @plugin.route('/tv/play/<id>/<season>/<episode>')
 def tv_play(id, season, episode):
@@ -433,7 +207,8 @@ def tv_play(id, season, episode):
 @plugin.route('/tv/play_by_name/<name>/<season>/<episode>/<lang>', options={'lang': 'en'})
 def tv_play_by_name(name, season, episode, lang):
 	tvdb_id = get_tvdb_id_from_name(name, lang)
-	if tvdb_id: tv_play(tvdb_id, season, episode)
+	if tvdb_id:
+		tv_play(tvdb_id, season, episode)
 
 @plugin.route('/tv/tvdb/<id>/')
 def tv_tvshow(id):
@@ -452,28 +227,27 @@ def tv_add_to_library_parsed(id, player):
 		try:
 			id = TVDB.search_by_imdb(id)
 		except:
-			header = 'TV show not found'
-			return dialogs.ok(header, 'no show information found for %s in TheTVDb' % id)
-	library_folder = lib_tvshows.setup_library(plugin.get_setting(settings.SETTING_TV_LIBRARY_FOLDER, unicode))
+			plugin.ok('TV show not found', 'no show information found for %s in TheTVDB' % id)
+	library_folder = lib_tvshows.setup_library(plugin.get_setting('tv_library_folder', unicode))
 	show = TVDB[int(id)]
 	imdb = show['imdb_id']
-	library_folder = lib_tvshows.setup_library(plugin.get_setting(settings.SETTING_TV_LIBRARY_FOLDER, unicode))
+	library_folder = lib_tvshows.setup_library(plugin.get_setting('tv_library_folder', unicode))
 	if lib_tvshows.add_tvshow_to_library(library_folder, show, player):
-		properties.set_property('clean_library', 1)
-	tools.scan_library(path=plugin.get_setting(settings.SETTING_TV_LIBRARY_FOLDER, unicode))
+		plugin.setProperty('plugin.video.openmeta.clean_library', 'true')
+	tools.scan_library(path=plugin.get_setting('tv_library_folder', unicode))
 
 @plugin.route('/tv/add_to_library/<id>')
 def tv_add_to_library(id):
-	library_folder = lib_tvshows.setup_library(plugin.get_setting(settings.SETTING_TV_LIBRARY_FOLDER, unicode))
+	library_folder = lib_tvshows.setup_library(plugin.get_setting('tv_library_folder', unicode))
 	show = TVDB[int(id)]
 	imdb = show['imdb_id']
-	library_folder = lib_tvshows.setup_library(plugin.get_setting(settings.SETTING_TV_LIBRARY_FOLDER, unicode))
+	library_folder = lib_tvshows.setup_library(plugin.get_setting('tv_library_folder', unicode))
 	if lib_tvshows.add_tvshow_to_library(library_folder, show):
-		properties.set_property('clean_library', 1)
-	tools.scan_library(path=plugin.get_setting(settings.SETTING_TV_LIBRARY_FOLDER, unicode))
+		plugin.setProperty('plugin.video.openmeta.clean_library', 'true')
+	tools.scan_library(path=plugin.get_setting('tv_library_folder', unicode))
 
 def tv_add_all_to_library(items, noscan=False):
-	library_folder = lib_tvshows.setup_library(plugin.get_setting(settings.SETTING_TV_LIBRARY_FOLDER, unicode))
+	library_folder = lib_tvshows.setup_library(plugin.get_setting('tv_library_folder', unicode))
 	ids = ''
 	if 'results' in items:
 		preids = []
@@ -483,7 +257,7 @@ def tv_add_all_to_library(items, noscan=False):
 		ids = '\n'.join(preids)
 	else:
 		ids = '\n'.join([str(i['show']['ids']['tvdb']) if i['show']['ids']['tvdb'] != None and i['show']['ids']['tvdb'] != '' else i['show']['ids']['imdb'] for i in items])
-	shows_batch_add_file = plugin.get_setting(settings.SETTING_TV_BATCH_ADD_FILE_PATH, unicode)
+	shows_batch_add_file = plugin.get_setting('tv_batch_add_file_path', unicode)
 	if xbmcvfs.exists(shows_batch_add_file):
 		batch_add_file = xbmcvfs.File(shows_batch_add_file)
 		pre_ids = batch_add_file.read()
@@ -500,7 +274,7 @@ def tv_add_all_to_library(items, noscan=False):
 
 @plugin.route('/tv/batch_add_to_library')
 def tv_batch_add_to_library():
-	tv_batch_file = plugin.get_setting(settings.SETTING_TV_BATCH_ADD_FILE_PATH, unicode)
+	tv_batch_file = plugin.get_setting('tv_batch_add_file_path', unicode)
 	if xbmcvfs.exists(tv_batch_file):
 		try:
 			f = open(xbmc.translatePath(tv_batch_file), 'r')
@@ -508,9 +282,8 @@ def tv_batch_add_to_library():
 			f.close()
 			ids = r.split('\n')
 		except:
-			title = '%s not found'.replace('%s ','')
-			return dialogs.notify(title='TV shows', msg=title, delay=2000, image=ICON)
-		library_folder = lib_tvshows.setup_library(plugin.get_setting(settings.SETTING_TV_LIBRARY_FOLDER, unicode))
+			plugin.notify('TV shows', 'not found', plugin.get_addon_icon(), 3000)
+		library_folder = lib_tvshows.setup_library(plugin.get_setting('tv_library_folder', unicode))
 		ids_index = 0
 		for id in ids:
 			if id == None or id == 'None':
@@ -537,7 +310,7 @@ def tv_batch_add_to_library():
 					show = TVDB[int(tvdb_id)]
 					lib_tvshows.batch_add_tvshows_to_library(library_folder, show)
 				except:
-					dialogs.notify(title='Failed to add', msg='%s' % id, delay=2000, image=ICON)
+					plugin.notify('Failed to add', '%s' % id, plugin.get_addon_icon(), 3000)
 			ids_index += 1
 		os.remove(xbmc.translatePath(tv_batch_file))
 		lib_tvshows.update_library()
@@ -550,7 +323,7 @@ def list_tvshows(response):
 		if tvdb_show is not None:
 			info = build_tvshow_info(tvdb_show, tmdb_show)
 			items.append(make_tvshow_item(info))
-	if xbmc.abortRequested:
+	if xbmc.Monitor().abortRequested():
 		return
 	if 'page' in response:
 		page = response['page']
@@ -560,19 +333,14 @@ def list_tvshows(response):
 			items.append(
 				{
 					'label': '%s/%s  [I]Next page[/I]  >>' % (page + 1, response['total_pages']),
-					'icon': nav_base.get_icon_path('item_next'),
 					'path': plugin.url_for(nav_base.caller_name(), **args),
-					'properties': {'fanart_image': FANART}
+					'thumbnail': plugin.get_media_icon('item_next'),
+					'fanart': plugin.get_addon_fanart()
 				})
 	return items
 
-def trakt_get_genres():
-	genres_dict = dict([(x['slug'], x['name']) for x in Trakt.trakt_get_genres('movies')])
-	genres_dict.update(dict([(x['slug'], x['name']) for x in Trakt.trakt_get_genres('shows')]))
-	return genres_dict
-
-def list_trakt_episodes(result, with_time=False):
-	genres_dict = trakt_get_genres()
+def list_trakt_episodes(result):
+	genres_dict = dict([(x['slug'], x['name']) for x in Trakt.get_genres('shows')])
 	items = []
 	for item in result:
 		if 'episode' in item:
@@ -610,20 +378,8 @@ def list_trakt_episodes(result, with_time=False):
 		else:
 			episode_title = 'TBA'
 		info = meta_info.get_tvshow_metadata_trakt(item['show'], genres_dict)
-		info['season'] = episode['season'] 
-		info['episode'] = episode['number']
-		info['title'] = episode['title']
-		info['aired'] = episode.get('first_aired','')
-		info['premiered'] = episode.get('first_aired','')
-		info['rating'] = episode.get('rating', '')
-		info['plot'] = episode.get('overview','')
-		info['tagline'] = episode.get('tagline')
-		info['votes'] = episode.get('votes','')
-		label = '%s - S%02dE%02d - %s' % (tvshow_title, season_num, episode_num, episode_title)
-		if with_time and info['premiered']:
-			airtime = time.strptime(item['first_aired'], '%Y-%m-%dt%H:%M:%S.000Z')
-			airtime = time.strftime('%Y-%m-%d %H:%M', airtime)
-			label = '%s - S%02dE%02d - %s' % (tvshow_title, season_num, episode_num, episode_title)
+		episode_info = meta_info.get_episode_metadata_trakt(info, episode)
+		episode_info['title'] = '%s (%02dx%02d): %s' % (tvshow_title, season_num, episode_num, episode_title)
 		if xbmc.getCondVisibility('system.hasaddon(script.extendedinfo)'):
 			context_menu = [
 				('OpenInfo', 'RunScript(script.extendedinfo,info=extendedepisodeinfo,tvshow=%s,season=%s,episode=%s)' % (tvshow_title, season_num, episode_num))]
@@ -631,19 +387,18 @@ def list_trakt_episodes(result, with_time=False):
 			context_menu = []
 		items.append(
 			{
-				'label': label,
+				'label': episode_info['title'],
 				'path': plugin.url_for('tv_play', id=id, season=season_num, episode=episode_num),
 				'context_menu': context_menu,
-				'info': info,
+				'info': episode_info,
 				'is_playable': True,
 				'info_type': 'video',
 				'stream_info': {'video': {}},
-				'thumbnail': info['poster'],
-				'poster': info['poster'],
-				'icon': 'DefaultVideo.png',
-				'properties': {'fanart_image': info['fanart']}
+				'thumbnail': episode_info['poster'],
+				'poster': episode_info['poster'],
+				'fanart': episode_info['fanart']
 			})
-	return plugin.finish(items=items, sort_methods=SORTRAKT, cache_to_disc=False, update_listing=True)
+	return plugin.finish(items=items, sort_methods=SORTRAKT, cache_to_disc=False)
 
 def build_tvshow_info(tvdb_show, tmdb_show=None):
 	tvdb_info = meta_info.get_tvshow_metadata_tvdb(tvdb_show)
@@ -690,10 +445,10 @@ def make_tvshow_item(info):
 		if tmdb_id != None and tmdb_id != '':
 			show = TV(tmdb_id).info()
 			if show['poster_path'] != None and show['poster_path'] != '':
-				info['poster'] = u'https://image.tmdb.org/t/p/w500%s' % show['poster_path']
+				info['poster'] = u'https://image.tmdb.org/t/p/w500' + show['poster_path']
 			if info['fanart'] == None or info['fanart'] == '':
 				if show['backdrop_path'] != None and show['backdrop_path'] != '':
-					info['fanart'] = u'https://image.tmdb.org/t/p/original%s' % show['backdrop_path']
+					info['fanart'] = u'https://image.tmdb.org/t/p/original' + show['backdrop_path']
 	if info['poster'] == None or info['poster'] == '':
 		if tvdb_id != None and tvdb_id != '':
 			show = TVDB.get_show(int(tvdb_id), full=False)
@@ -714,12 +469,12 @@ def make_tvshow_item(info):
 				show = []
 			if show != []:
 				if show['poster_path'] != None and show['poster_path'] != '':
-					info['poster'] = u'https://image.tmdb.org/t/p/w500%s' % show['poster_path']
+					info['poster'] = u'https://image.tmdb.org/t/p/w500' + show['poster_path']
 				if info['fanart'] == None or info['fanart'] == '':
 					if show['backdrop_path'] != None and show['backdrop_path'] != '':
-						info['fanart'] = u'https://image.tmdb.org/t/p/original%s' % show['backdrop_path']
+						info['fanart'] = u'https://image.tmdb.org/t/p/original' + show['backdrop_path']
 	if info['fanart'] == None or info['fanart'] == '':
-		info['fanart'] = FANART
+		info['fanart'] = plugin.get_addon_fanart()
 	if xbmc.getCondVisibility('system.hasaddon(script.extendedinfo)'):
 		context_menu = [
 			('OpenInfo', 'RunScript(script.extendedinfo,info=extendedtvinfo,tvdb_id=%s)' % tvdb_id),
@@ -733,9 +488,8 @@ def make_tvshow_item(info):
 		'path': plugin.url_for('tv_tvshow', id=tvdb_id),
 		'context_menu': context_menu,
 		'thumbnail': info['poster'],
-		'icon': 'DefaultVideo.png',
 		'poster': info['poster'],
-		'properties': {'fanart_image': info['fanart']},
+		'fanart': info['fanart'],
 		'info_type': 'video',
 		'stream_info': {'video': {}},
 		'info': info
@@ -746,7 +500,6 @@ def list_seasons_tvdb(id):
 	id = int(id)
 	show = TVDB[id]
 	show_info = meta_info.get_tvshow_metadata_tvdb(show, banners=False)
-	title = show_info['name']
 	items = []
 	for (season_num, season) in show.items():
 		if season_num == 0 and not False:
@@ -756,19 +509,18 @@ def list_seasons_tvdb(id):
 		season_info = meta_info.get_season_metadata_tvdb(show_info, season)
 		if xbmc.getCondVisibility('system.hasaddon(script.extendedinfo)'):
 			context_menu = [
-				('OpenInfo', 'RunScript(script.extendedinfo,info=seasoninfo,tvshow=%s,season=%s)' % (title, season_num))]
+				('OpenInfo', 'RunScript(script.extendedinfo,info=seasoninfo,tvshow=%s,season=%s)' % (show_info['name'], season_num))]
 		else:
 			context_menu = []
 		items.append(
 			{
-				'label': u'Season %s' % season_num,
+				'label': 'Season %s' % season_num,
 				'path': plugin.url_for('tv_season', id=id, season_num=season_num),
 				'context_menu': context_menu,
 				'info': season_info,
 				'thumbnail': season_info['poster'],
-				'icon': 'DefaultVideo.png',
 				'poster': season_info['poster'],
-				'properties': {'fanart_image': season_info['fanart']}
+				'fanart': season_info['fanart']
 			})
 	return items
 
@@ -778,7 +530,6 @@ def list_episodes_tvdb(id, season_num):
 	season_num = int(season_num)
 	show = TVDB[id]
 	show_info = meta_info.get_tvshow_metadata_tvdb(show, banners=False)
-	title = show_info['name']
 	season = show[season_num]
 	season_info = meta_info.get_season_metadata_tvdb(show_info, season, banners=True)
 	items = []
@@ -788,7 +539,7 @@ def list_episodes_tvdb(id, season_num):
 		episode_info = meta_info.get_episode_metadata_tvdb(season_info, episode)
 		if xbmc.getCondVisibility('system.hasaddon(script.extendedinfo)'):
 			context_menu = [
-				('OpenInfo', 'RunScript(script.extendedinfo,info=extendedepisodeinfo,tvshow=%s,season=%s,episode=%s)' % (title, season_num, episode_num))]
+				('OpenInfo', 'RunScript(script.extendedinfo,info=extendedepisodeinfo,tvshow=%s,season=%s,episode=%s)' % (show_info['name'], season_num, episode_num))]
 		else:
 			context_menu = []
 		items.append(
@@ -802,8 +553,7 @@ def list_episodes_tvdb(id, season_num):
 				'stream_info': {'video': {}},
 				'thumbnail': episode_info['poster'],
 				'poster': season_info['poster'],
-				'icon': 'DefaultVideo.png',
-				'properties': {'fanart_image': episode_info['fanart']}
+				'fanart': episode_info['fanart']
 			})
 	return items
 
@@ -823,3 +573,159 @@ def tmdb_to_tvdb(tmdb_show):
 	if results:
 		tvdb_show = TVDB[results[0]]
 	return tvdb_show, tmdb_show
+
+@plugin.route('/my_trakt/tv_lists/tv_episodes_upcoming')
+def trakt_tv_upcoming_episodes(raw=False):
+	result = Trakt.get_calendar()
+	if raw: 
+		return result
+	else:
+		return list_trakt_episodes(result)
+
+@plugin.route('/my_trakt/tv_lists/tv_episodes_next')
+def trakt_tv_next_episodes(raw=False):
+	items = []
+	result = Trakt.get_next_episodes()
+	for episode in result:
+		trakt_id = episode['show']['ids']['trakt']
+		episode_info = Trakt.get_episode(trakt_id, episode['season'], episode['number'])
+		first_aired_string = episode_info['first_aired']
+		episode['first_aired'] = first_aired_string
+		if int(first_aired_string[:4]) < 1970:
+			items.append(episode)
+		elif first_aired_string:
+			first_aired = time.mktime(time.strptime(first_aired_string[:19], '%Y-%m-%dT%H:%M:%S'))
+			if first_aired < time.time():
+				items.append(episode)
+	if raw:
+		return items
+	else:
+		return list_trakt_episodes(items)
+
+@plugin.route('/my_trakt/tv_lists/tv/watchlist')
+def trakt_tv_watchlist(raw=False):
+	result = Trakt.get_watchlist('shows')
+	if raw:
+		return result
+	else:
+		return list_trakt_tvshows(result, '1', '1')
+
+@plugin.route('/my_trakt/tv_lists/trakt_my_tv_lists')
+def lists_trakt_my_tv_lists():
+	lists = Trakt.get_lists()
+	items = []
+	for list in lists:
+		name = list['name']
+		user = list['user']['username']
+		slug = list['ids']['slug']
+		items.append(
+			{
+				'label': name,
+				'path': plugin.url_for('lists_trakt_show_tv_list', user=user, slug=slug),
+				'thumbnail': plugin.get_media_icon('traktmylists'),
+				'fanart': plugin.get_addon_fanart()
+			})
+	return plugin.finish(items=items, sort_methods=SORT)
+
+@plugin.route('/my_trakt/tv_lists/trakt_liked_tv_list/<page>')
+def lists_trakt_liked_tv_lists(page):
+	lists, pages = Trakt.get_liked_lists(page)
+	items = []
+	for list in lists:
+		info = list['list']
+		name = info['name']
+		user = info['user']['username']
+		slug = info['ids']['slug']
+		items.append(
+			{
+				'label': name,
+				'path': plugin.url_for('lists_trakt_show_tv_list', user = user, slug = slug),
+				'thumbnail': plugin.get_media_icon('traktlikedlists'),
+				'fanart': plugin.get_addon_fanart()
+			})
+	nextpage = int(page) + 1
+	if pages > page:
+		items.append(
+			{
+				'label': '%s/%s  [I]Next page[/I]  >>' % (nextpage, pages),
+				'path': plugin.url_for('lists_trakt_liked_tv_lists', page=int(page) + 1),
+				'thumbnail': plugin.get_media_icon('item_next'),
+				'fanart': plugin.get_addon_fanart()
+			})
+	return plugin.finish(items=items, sort_methods=SORT)
+
+@plugin.route('/my_trakt/tv_lists/tv/collection')
+def lists_trakt_tv_collection(raw=False):
+	results = sorted(Trakt.get_collection('shows'), key=lambda k: k['last_collected_at'], reverse=True)
+	if raw:
+		return results
+	shows = [meta_info.get_tvshow_metadata_trakt(item['show']) for item in results]
+	items = [make_tvshow_item(show) for show in shows if show.get('tvdb_id')]
+	return items
+
+@plugin.route('/my_trakt/tv_lists/tv/collection/tv_to_library')
+def lists_trakt_tv_collection_to_library():
+	tv_add_all_to_library(Trakt.get_collection('shows'))
+
+@plugin.route('/my_trakt/tv_lists/tv/show_list/<user>/<slug>')
+def lists_trakt_show_tv_list(user, slug, raw=False):
+	list_items = Trakt.get_list(user, slug)
+	if raw:
+		return list_items
+	return _lists_trakt_show_tv_list(list_items)
+
+@plugin.route('/my_trakt/tv_lists/tv/_show_tv_list/<list_items>')
+def _lists_trakt_show_tv_list(list_items):
+	genres_dict = dict([(x['slug'], x['name']) for x in Trakt.get_genres('shows')])
+	items = []
+	for list_item in list_items:
+		item = None
+		item_type = list_item['type']
+		if item_type == 'show':
+			tvdb_id = list_item['show']['ids']['tvdb']
+			if tvdb_id != '' and tvdb_id != None:
+				show = list_item['show']
+				info = meta_info.get_tvshow_metadata_trakt(show, genres_dict)
+				item = make_tvshow_item(info)
+			else:
+				item = None
+		elif item_type == 'season':
+			tvdb_id = list_item['show']['ids']['tvdb']
+			season = list_item['season']
+			show = list_item['show']
+			show_info = meta_info.get_tvshow_metadata_trakt(show, genres_dict)
+			season_info = meta_info.get_season_metadata_trakt(show_info,season, genres_dict)
+			label = '%s - Season %s' % (show['title'], season['number'])
+			item = (
+				{
+					'label': label,
+					'path': plugin.url_for('tv_season', id=tvdb_id, season_num=list_item['season']['number']),
+					'info': season_info,
+					'thumbnail': season_info['poster'],
+					'poster': season_info['poster'],
+					'fanart': season_info['fanart']
+				})
+		elif item_type == 'episode':
+			tvdb_id = list_item['show']['ids']['tvdb']
+			episode = list_item['episode']
+			show = list_item['show']
+			season_number = episode['season']
+			episode_number = episode['number']
+			show_info = meta_info.get_tvshow_metadata_trakt(show, genres_dict)
+			episode_info = meta_info.get_episode_metadata_trakt(show_info, episode)
+			label = '%s - S%sE%s - %s' % (show_info['title'], season_number, episode_number, episode_info['title'])
+			item = (
+				{
+					'label': label,
+					'path': plugin.url_for('tv_play', id=tvdb_id, season=season_number, episode=episode_number),
+					'info': episode_info,
+					'is_playable': True,
+					'info_type': 'video',
+					'stream_info': {'video': {}},
+					'thumbnail': episode_info['poster'],
+					'poster': episode_info['poster'],
+					'fanart': episode_info['fanart']
+				})
+		if item is not None:
+			items.append(item)
+	return items

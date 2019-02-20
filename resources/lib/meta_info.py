@@ -96,7 +96,10 @@ def get_tvshow_metadata_trakt(show, genres_dict=None):
 	info['poster'] = images[0]
 	info['fanart'] = images[1]
 	if genres_dict:
-		info['genre'] = u' / '.join([genres_dict[x] for x in show['genres']])
+		try:
+			info['genre'] = u' / '.join([genres_dict[x] for x in show['genres']])
+		except:
+			pass
 	if show.get('trailer'):
 		info['trailer'] = make_trailer(show['trailer'])
 	return info
@@ -207,9 +210,9 @@ def get_season_metadata_tvmaze(show_metadata, season):
 
 def get_episode_metadata_tvdb(season_metadata, episode, banners=True):
 	info = copy.deepcopy(season_metadata)
-	info['episode'] = episode.get('episodenumber')
+	info['episode'] = int(episode.get('episodenumber'))
 	info['name'] = episode.get('episodename','')
-	info['title'] = u'%s. %s' % (info['episode'], info['name'])
+	info['title'] = u'%02d. %s' % (info['episode'], info['name'])
 	info['aired'] = episode.get('firstaired','')
 	info['premiered'] = episode.get('firstaired','')
 	info['rating'] = episode.get('rating', '')

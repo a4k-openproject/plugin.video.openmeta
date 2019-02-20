@@ -1,7 +1,6 @@
 import re, copy, threading
 import xbmc, xbmcgui, xbmcaddon
 from resources.lib import text
-from resources.lib import dialogs
 from resources.lib.rpc import RPC
 from resources.lib.xswift2 import plugin
 
@@ -175,7 +174,7 @@ class Lister:
 		result_files = []
 		keyboard_hint = None
 		for i, hint in enumerate(guidance):
-			if self.stop_flag.isSet() or xbmc.abortRequested:
+			if self.stop_flag.isSet() or xbmc.Monitor().abortRequested():
 				return [],[]
 			if not path:
 				break

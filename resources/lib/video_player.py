@@ -1,6 +1,5 @@
 import json
 import xbmc
-from resources.lib import properties
 from resources.lib.rpc import RPC
 from resources.lib.xswift2 import plugin
 
@@ -15,7 +14,7 @@ class VideoPlayer(xbmc.Player):
 		self.currentTime = 0
 
 	def currently_playing(self):
-		video_data = properties.get_property('data')
+		video_data = plugin.getProperty('plugin.video.openmeta.data')
 		if video_data:
 			try:
 				video_data = json.loads(video_data)
@@ -37,27 +36,35 @@ class VideoPlayer(xbmc.Player):
 		if dbid:
 			episodes = [ep for ep in episodes if ep['episodeid']==dbid]
 		else:
-			episodes = [ep for ep in episodes if plugin.id in ep['file'] and '/%s/' % tvdb_id in ep['file'].replace('\\', '/')]
+			episodes = [ep for ep in episodes if 'plugin.video.openmeta' in ep['file'] and '/%s/' % tvdb_id in ep['file'].replace('\\', '/')]
 		if episodes:
 			return episodes[0]['episodeid']
 		return None
 
 	def onPlayBackStarted(self):
-		self.reset()
-		if self.isPlayingVideo():
-			self.id = self.currently_playing()
-			self.totalTime = self.getTotalTime()
+		if int(xbmc.getInfoLabel('System.BuildVersion')[:2]) < 18:
+			self.reset()
+			if self.isPlayingVideo():
+				self.id = self.currently_playing()
+				self.totalTime = self.getTotalTime()
+
+	def onAVStarted(self):
+		if int(xbmc.getInfoLabel('System.BuildVersion')[:2]) > 17:
+			self.reset()
+			if self.isPlayingVideo():
+				self.id = self.currently_playing()
+				self.totalTime = self.getTotalTime()
 
 	def onPlayBackEnded(self):
-		properties.clear_property('script.trakt.ids')
-		properties.clear_property('data')
+		plugin.clearProperty('script.trakt.ids')
+		plugin.clearProperty('plugin.video.openmeta.data')
 		if self.totalTime > 0 and self.currentTime / self.totalTime >= 0.75:
 			self.mark_as_watched()
 		self.reset()
 
 	def onPlayBackStopped(self):
-		properties.clear_property('script.trakt.ids')
-		properties.clear_property('data')
+		plugin.clearProperty('script.trakt.ids')
+		plugin.clearProperty('plugin.video.openmeta.data')
 		if self.totalTime > 0 and self.currentTime / self.totalTime >= 0.75:
 			self.mark_as_watched()
 		self.reset()

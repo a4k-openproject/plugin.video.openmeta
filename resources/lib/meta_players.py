@@ -1,7 +1,5 @@
 import json
-import xbmc, xbmcvfs, xbmcaddon
-from resources.lib import dialogs
-from resources.lib.xswift2 import plugin
+import xbmc, xbmcvfs
 
 class AddonPlayer(object):
 	def __init__(self, filename, media, meta):
@@ -13,8 +11,8 @@ class AddonPlayer(object):
 		self.commands = meta.get(media, [])
 
 	def is_empty(self):
-		if "," in self.pluginid:
-			PLUGINS = [xbmc.getCondVisibility('System.HasAddon(%s)' % p) for p in self.pluginid.split(",")]
+		if ',' in self.pluginid:
+			PLUGINS = [xbmc.getCondVisibility('System.HasAddon(%s)' % p) for p in self.pluginid.split(',')]
 			if False in PLUGINS:
 				return True
 		elif self.pluginid and not xbmc.getCondVisibility('System.HasAddon(%s)' % self.pluginid):

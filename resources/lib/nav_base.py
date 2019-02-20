@@ -1,4 +1,4 @@
-import os, sys, inspect
+import sys, inspect
 from resources.lib.xswift2 import plugin
 
 def get_genre_icon(genre_id):
@@ -34,7 +34,7 @@ def get_genre_icon(genre_id):
 		10770: 'genre_tv'
 		}
 	if genre_id in icons:
-		return get_icon_path(icons[genre_id])
+		return plugin.get_media_icon(icons[genre_id])
 	return 'DefaultVideo.png'
 
 def tmdb_movie_genres_mock():
@@ -192,18 +192,6 @@ def caller_args():
 	caller = inspect.stack()[2][0]
 	args, _, _, values = inspect.getargvalues(caller)
 	return dict([(i, values[i]) for i in args])
-
-def get_icon_path(icon_name):
-	addon_path = plugin.addon.getAddonInfo('path')    
-	return os.path.join(addon_path, 'resources', 'media', icon_name + '.png')
-
-def get_meta_icon_path():
-	addon_path = plugin.addon.getAddonInfo('path')    
-	return os.path.join(addon_path, 'resources', 'icon.png')
-
-def get_background_path():
-	addon_path = plugin.addon.getAddonInfo('path')    
-	return os.path.join(addon_path, 'resources', 'fanart.jpg')
 
 def get_genres():
 	result = get_base_genres()

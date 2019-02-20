@@ -20,13 +20,6 @@ VIEW_MODES = {
         'skin.xeebo': 55
 	}}
 
-def to_utf8(text):
-	try:
-		return text.encode('utf-8')
-	except:
-		pass
-	return text
-
 class _PersistentDictMixin(object):
 	def __init__(self, filename, flag='c', mode=None, file_format='pickle'):
 		self.lock = threading.RLock()
@@ -149,27 +142,21 @@ class TimedStorage(_Storage):
 
 class ListItem(object):
 	def __init__(self, label=None, label2=None, icon=None, thumbnail=None, path=None):
-		kwargs = {
-			'label': label,
-			'label2': label2,
-			'iconImage': icon,
-			'thumbnailImage': thumbnail,
-			'path': path
-			}
-		kwargs = dict((key, val) for key, val in kwargs.items() if val is not None)
-		self._listitem = xbmcgui.ListItem(**kwargs)
+		self._listitem = xbmcgui.ListItem(label=label, label2=label2, path=path)
+		self._art = {'icon': icon, 'thumb': thumbnail}
 		self._icon = icon
 		self._path = path
 		self._thumbnail = thumbnail
 		self._context_menu_items = []
-		self.is_folder = True
 		self._played = False
+		self._playable = False
+		self.is_folder = True
 
 	def __repr__(self):
-		return ('<ListItem "%s">' % to_utf8(self.label))
+		return ("<ListItem '%s'>" % self.label).encode('utf-8')
 
 	def __str__(self):
-		return ('%s (%s)' % (to_utf8(self.label), self.path))
+		return ('%s (%s)' % (self.label, self.path)).encode('utf-8')
 
 	def get_context_menu_items(self):
 		return self._context_menu_items
@@ -183,32 +170,14 @@ class ListItem(object):
 		self._context_menu_items.extend(items)
 		self._listitem.addContextMenuItems(items, replace_items)
 
-	def get_label(self):
-		return self._listitem.getLabel()
+	def as_tuple(self):
+		return self.path, self._listitem, self.is_folder
 
-	def set_label(self, label):
-		return self._listitem.setLabel(label)
+	def as_xbmc_listitem(self):
+		return self._listitem
 
-	label = property(get_label, set_label)
-
-	def get_label2(self):
-		return self._listitem.getLabel2()
-
-	def set_label2(self, label2):
-		return self._listitem.setLabel2(label2)
-
-	label2 = property(get_label2, set_label2)
-
-	def is_selected(self):
-		return self._listitem.isSelected()
-
-	def select(self, selected_status=True):
-		return self._listitem.select(selected_status)
-
-	selected = property(is_selected, select)
-
-	def set_info(self, type, info_labels):
-		return self._listitem.setInfo(type, info_labels)
+	def set_info(self, info_type, info_labels):
+		return self._listitem.setInfo(info_type, info_labels)
 
 	def get_property(self, key):
 		return self._listitem.getProperty(key)
@@ -219,70 +188,122 @@ class ListItem(object):
 	def add_stream_info(self, stream_type, stream_values):
 		return self._listitem.addStreamInfo(stream_type, stream_values)
 
-	def get_icon(self):
-		return self._icon
+	@property
+	def selected(self):
+		return self._listitem.isSelected()
 
-	def set_icon(self, icon):
-		self._icon = icon
-		return self._listitem.setIconImage(icon)
+	@selected.setter
+	def selected(self, value):
+		self._listitem.select(value)
 
-	icon = property(get_icon, set_icon)
+	@property
+	def label(self):
+		return self._listitem.getLabel()
 
-	def get_thumbnail(self):
-		return self._thumbnail
+	@label.setter
+	def label(self, value):
+		self._listitem.setLabel(value)
 
-	def set_thumbnail(self, thumbnail):
-		self._thumbnail = thumbnail
-		return self._listitem.setThumbnailImage(thumbnail)
+	@property
+	def label2(self):
+		return self._listitem.getLabel2()
 
-	thumbnail = property(get_thumbnail, set_thumbnail)
+	@label2.setter
+	def label2(self, value):
+		self._listitem.setLabel2(value)
 
-	def get_path(self):
+	@property
+	def icon(self):
+		return self._art.get('icon')
+
+	@icon.setter
+	def icon(self, value):
+		self._art['icon'] = value
+		self._listitem.setArt(self._art)
+
+	@property
+	def thumbnail(self):
+		return self._art.get('thumb')
+
+	@thumbnail.setter
+	def thumbnail(self, value):
+		self._art['thumb'] = value
+		self._listitem.setArt(self._art)
+
+	@property
+	def poster(self):
+		return self._art.get('poster')
+
+	@poster.setter
+	def poster(self, value):
+		self._art['poster'] = value
+		self._listitem.setArt(self._art)
+
+	@property
+	def art(self):
+		return self._art
+
+	@art.setter
+	def art(self, value):
+		self._art = value
+		self._listitem.setArt(value)
+
+	def set_art(self, value):
+		self._art = value
+		self._listitem.setArt(value)
+
+	@property
+	def path(self):
 		return self._path
 
-	def set_path(self, path):
-		self._path = path
-		return self._listitem.setPath(path)
+	@path.setter
+	def path(self, value):
+		self._path = value
+		self._listitem.setPath(value)
 
-	path = property(get_path, set_path)
+	@property
+	def playable(self):
+		return self._playable
 
-	def get_is_playable(self):
-		return not self.is_folder
+	@playable.setter
+	def playable(self, value):
+		self._playable = value
+		if value:
+			self.is_folder = False
+		is_playable = 'true' if self._playable else 'false'
+		self.set_property('isPlayable', is_playable)
 
-	def set_is_playable(self, is_playable):
-		value = 'false'
-		if is_playable:
-			value = 'true'
-		self.set_property('isPlayable', value)
-		self.is_folder = not is_playable
+	@property
+	def played(self):
+		return self._played
 
-	playable = property(get_is_playable, set_is_playable)
+	@played.setter
+	def played(self, value):
+		self._played = value
 
 	def set_played(self, was_played):
 		self._played = was_played
 
-	def get_played(self):
-		return self._played
-
-	def as_tuple(self):
-		return self.path, self._listitem, self.is_folder
-
-	def as_xbmc_listitem(self):
-		return self._listitem
-
 	@classmethod
-	def from_dict(cls, label=None, label2=None, icon=None, thumbnail=None, path=None, selected=None, info=None, properties=None, context_menu=None,
-					replace_context_menu=False, is_playable=None, info_type='video', stream_info=None, poster=None,banner=None, isTV=False, is_folder=None):
-		listitem = cls(label, label2, icon, thumbnail, path)
+	def from_dict(cls, label=None, label2=None, icon=None, thumbnail=None, path=None, selected=None,
+					info=None, properties=None, context_menu=None, replace_context_menu=False,
+					is_playable=None, info_type='video', stream_info=None, **kwargs):
+		listitem = cls(label, label2, path=path)
+		listitem.art = {
+			'icon': icon,
+			'thumb': thumbnail,
+			'poster': kwargs.get('poster'),
+			'banner': kwargs.get('banner'),
+			'fanart': kwargs.get('fanart'),
+			'landscape': kwargs.get('landscape')
+			}
 		if selected is not None:
-			listitem.select(selected)
+			listitem.selected = selected
 		if info:
 			listitem.set_info(info_type, info)
 		if is_playable:
-			listitem.set_is_playable(True)
+			listitem.playable = True
 			listitem.is_folder = False
-		if is_folder:
-			listitem.is_folder = True
 		if properties:
 			if hasattr(properties, 'items'):
 				properties = properties.items()
@@ -293,24 +314,6 @@ class ListItem(object):
 				listitem.add_stream_info(stream_type, stream_values)
 		if context_menu:
 			listitem.add_context_menu_items(context_menu, replace_context_menu)
-		art = {}
-		if poster:
-			art['poster'] = poster
-			if isTV:
-				art['tvshow.poster'] = poster
-				art['season.poster'] = poster
-		if banner:
-			art['banner'] = banner
-			if isTV:
-				art['tvshow.banner'] = banner
-				art['season.banner'] = banner                            
-		if thumbnail:
-			art['thumb'] = thumbnail
-		if art:
-			try:
-				listitem._listitem.setArt(art)
-			except:
-				pass
 		return listitem
 
 class SortMethod(object):
@@ -324,7 +327,7 @@ class XBMCMixin(object):
 	_function_cache_name = '.functions'
 	_lock = threading.Lock()
 
-	def cached(self, TTL=60 * 24, cache=None):
+	def cached(self, TTL=60*24, cache=None):
 		cachename = cache
 		if cachename is None:
 			cachename = self._function_cache_name
@@ -405,23 +408,19 @@ class XBMCMixin(object):
 			'images',
 			'movies',
 			'playlists',
-			'plugins',
 			'roles',
 			'seasons',
 			'sets',
 			'studios',
 			'tags',
 			'tvshows',
+			'videos',
 			'years'
 			]
-		if content not in contents:
-			return False
-		else:
-			xbmcplugin.setContent(self.handle, content)
-			return True
+		xbmcplugin.setContent(self.handle, content)
 
 	def get_setting(self, key, converter=None, choices=None):
-		value = self.addon.getSetting(id=key)
+		value = self.addon.getSetting(key)
 		if converter is str:
 			return value
 		elif converter is unicode:
@@ -448,9 +447,11 @@ class XBMCMixin(object):
 	def open_settings(self):
 		self.addon.openSettings()
 
-	def add_to_playlist(self, items, playlist='video'):
+	@staticmethod
+	def add_to_playlist(items, playlist='video'):
 		playlists = {'music': 0, 'video': 1}
-		assert playlist in playlists.keys(), ('Playlist "%s" is invalid.' % playlist)
+		if playlist not in playlists:
+			raise ValueError('Playlist "%s" is invalid.' % playlist)
 		selected_playlist = xbmc.PlayList(playlists[playlist])
 		_items = []
 		for item in items:
@@ -458,7 +459,7 @@ class XBMCMixin(object):
 				item['info_type'] = playlist
 				item = ListItem.from_dict(**item)
 			_items.append(item)
-			selected_playlist.add(item.get_path(), item.as_xbmc_listitem())
+			selected_playlist.add(item._path, item.as_xbmc_listitem())
 		return _items
 
 	def get_view_mode_id(self, view_mode):
@@ -480,15 +481,43 @@ class XBMCMixin(object):
 		if keyboard.isConfirmed():
 			return keyboard.getText()
 
-	def notify(self, msg='', title=None, delay=5000, image=''):
-		if title is None:
-			title = self.addon.getAddonInfo('name')
-		xbmc.executebuiltin('XBMC.Notification("%s", "%s", "%s", "%s", %s")' % (to_utf8(msg), to_utf8(title), delay, to_utf8(image), False))
+	def notify(self, heading, message, icon, time, sound=False):
+		if heading is None:
+			heading = self.addon.getAddonInfo('name')
+		return xbmcgui.Dialog().notification(heading, message, icon, time, sound)
+
+	def ok(self, heading, line1, line2='', line3=''):
+		return xbmcgui.Dialog().ok(heading, line1, line2, line3)
+
+	def select(self, heading, list):
+		return xbmcgui.Dialog().select(heading, list)
+
+	def yesno(self, heading, line1, line2='', line3='', nolabel='No', yeslabel='Yes'):
+		return xbmcgui.Dialog().yesno(heading, line1, line2, line3, nolabel, yeslabel)
+
+	def setProperty(self, key, value):
+		xbmcgui.Window(10000).setProperty(key, str(value))
+
+	def getProperty(self, key):
+		return xbmcgui.Window(10000).getProperty(key)
+
+	def clearProperty(self, key):
+		xbmcgui.Window(10000).clearProperty(key)
+
+	def get_addon_icon(self):   
+		return self.addon.getAddonInfo('icon')
+
+	def get_addon_fanart(self):
+		return self.addon.getAddonInfo('fanart')
+
+	def get_media_icon(self, icon):
+		addon_path = self.addon.getAddonInfo('path')    
+		return os.path.join(addon_path, 'resources', 'media', icon + '.png')
 
 	def _listitemify(self, item):
 		info_type = self.info_type if hasattr(self, 'info_type') else 'video'
-		if not hasattr(item, 'as_tuple'):
-			if 'info_type' not in item.keys():
+		if not hasattr(item, 'as_tuple') and hasattr(item, 'keys'):
+			if 'info_type' not in item:
 				item['info_type'] = info_type
 			item = ListItem.from_dict(**item)
 		return item
@@ -521,17 +550,15 @@ class XBMCMixin(object):
 		return [item]
 
 	def play_video(self, item, player=None):
-		try:
+		if isinstance(item, dict):
 			item['info_type'] = 'video'
-		except TypeError:
-			pass
 		item = self._listitemify(item)
 		item.set_played(True)
 		if player:
 			_player = xbmc.Player(player)
 		else:
 			_player = xbmc.Player()
-		_player.play(item.get_path(), item.as_xbmc_listitem())
+		_player.play(item._path, item.as_xbmc_listitem())
 		return [item]
 
 	def play_audio(self, item, player=None):
@@ -545,22 +572,15 @@ class XBMCMixin(object):
 			_player = xbmc.Player(player)
 		else:
 			_player = xbmc.Player()
-		_player.play(item.get_path(), item.as_xbmc_listitem())
+		_player.play(item._path, item.as_xbmc_listitem())
 		return [item]
 
 	def add_items(self, items):
 		_items = [self._listitemify(item) for item in items]
-		tuples = [item.as_tuple() for item in _items]
+		tuples = [item.as_tuple() for item in _items if hasattr(item, 'as_tuple')]
 		xbmcplugin.addDirectoryItems(self.handle, tuples, len(tuples))
 		self.added_items.extend(_items)
 		return _items
-
-	def end_of_directory(self, succeeded=True, update_listing=False, cache_to_disc=True):
-		self._update_listing = update_listing
-		if not self._end_of_directory:
-			self._end_of_directory = True
-			return xbmcplugin.endOfDirectory(self.handle, succeeded, update_listing, cache_to_disc)
-		assert False, 'Already called endOfDirectory.'
 
 	def add_sort_method(self, sort_method, label2_mask=None):
 		try:
@@ -572,12 +592,20 @@ class XBMCMixin(object):
 		else:
 			xbmcplugin.addSortMethod(self.handle, sort_method)
 
+	def end_of_directory(self, succeeded=True, update_listing=False, cache_to_disc=True):
+		self._update_listing = update_listing
+		if not self._end_of_directory:
+			self._end_of_directory = True
+			return xbmcplugin.endOfDirectory(self.handle, succeeded, update_listing, cache_to_disc)
+		else:
+			raise Exception('Already called endOfDirectory.')
+
 	def finish(self, items=None, sort_methods=None, succeeded=True, update_listing=False, cache_to_disc=True, view_mode=None):
 		if items:
 			self.add_items(items)
 		if sort_methods:
 			for sort_method in sort_methods:
-				if not isinstance(sort_method, basestring) and hasattr(sort_method, '__len__'):
+				if isinstance(sort_method, (list, tuple)):
 					self.add_sort_method(*sort_method)
 				else:
 					self.add_sort_method(sort_method)
@@ -585,7 +613,7 @@ class XBMCMixin(object):
 			try:
 				view_mode_id = int(view_mode)
 			except ValueError:
-				view_mode_id = self.get_view_mode_id(view_mode)
+				view_mode_id = None
 			if view_mode_id is not None:
 				self.set_view_mode(view_mode_id)
 		self.end_of_directory(succeeded, update_listing, cache_to_disc)
@@ -648,7 +676,7 @@ class UrlRule(object):
 		self._url_rule = url_rule
 		self._view_func = view_func
 		self._options = options or {}
-		self._keywords = re.findall(r'\<(.+?)\>', url_rule)
+		self._keywords = re.findall(r'<(.+?)>', url_rule)
 		self._url_format = self._url_rule.replace('<', '{').replace('>', '}')
 		rule = self._url_rule
 		if rule != '/':
@@ -656,14 +684,17 @@ class UrlRule(object):
 		p = rule.replace('<', '(?P<').replace('>', '>[^/]+?)')
 		try:
 			self._regex = re.compile('^' + p + '$')
-		except re.error as e:
+		except re.error:
 			raise ValueError('There was a problem creating this URL rule. Ensure you do not have any unpaired angle brackets: "<" or ">"')
 
 	def __eq__(self, other):
-		return ((self._name, self._url_rule, self._view_func, self._options) == (other._name, other._url_rule, other._view_func, other._options))
+		if isinstance(other, UrlRule):
+			return ((self._name, self._url_rule, self._view_func, self._options) == (other._name, other._url_rule, other._view_func, other._options))
+		else:
+			raise NotImplementedError
 
 	def __ne__(self, other):
-		return not self.__eq__(other)
+		return not self == other
 
 	def match(self, path):
 		m = self._regex.search(path)
@@ -736,14 +767,11 @@ def setup_log(name):
 log = setup_log('xswift2')
 
 class Plugin(XBMCMixin):
-	def __init__(self, name=None, addon_id=None, filepath=None, info_type=None):
+	def __init__(self, name=None, addon_id=None, info_type=None):
 		self._name = name
 		self._routes = []
 		self._view_functions = {}
-		if addon_id:
-			self._addon = xbmcaddon.Addon(id=addon_id)
-		else:
-			self._addon = xbmcaddon.Addon()
+		self._addon = xbmcaddon.Addon()
 		self._addon_id = addon_id or self._addon.getAddonInfo('id')
 		self._name = name or self._addon.getAddonInfo('name')
 		self._info_type = info_type
@@ -751,7 +779,7 @@ class Plugin(XBMCMixin):
 			types = {
 				'video': 'video',
 				'audio': 'music',
-				'image': 'pictures'
+				'image': 'pictures',
 				}
 			self._info_type = types.get(self._addon_id.split('.')[1], 'video')
 		self._current_items = []
@@ -804,7 +832,8 @@ class Plugin(XBMCMixin):
 	def name(self):
 		return self._name
 
-	def _parse_request(self, url=None, handle=None):
+	@staticmethod
+	def _parse_request(url=None, handle=None):
 		if url is None:
 			url = sys.argv[0]
 			if len(sys.argv) == 3:
@@ -823,10 +852,19 @@ class Plugin(XBMCMixin):
 			return route_decorator(cache_decorator(func))
 		return new_decorator
 
-	def route(self, url_rule, name=None, options=None):
+	def route(self, url_rule=None, name=None, root=False, options=None):
 		def decorator(f):
 			view_name = name or f.__name__
-			self.add_url_rule(url_rule, f, name=view_name, options=options)
+			if root:
+				url = '/'
+			elif not url_rule:
+				url = '/' + view_name + '/'
+				args = inspect.getargspec(f)[0]
+				if args:
+					url += '/'.join('%s/<%s>' % (p, p) for p in args)
+			else:
+				url = url_rule
+			self.add_url_rule(url, f, name=view_name, options=options)
 			return f
 		return decorator
 
@@ -848,8 +886,22 @@ class Plugin(XBMCMixin):
 				raise NotFoundException("%s does not match any known patterns." % endpoint)
 		if not rule:
 			raise AmbiguousUrlException
-		pathqs = rule.make_path_qs(items)
-		return 'plugin://%s%s' % (self._addon_id, pathqs)
+		path_qs = rule.make_path_qs(items)
+		return 'plugin://plugin.video.openmeta%s' % path_qs
+
+	def redirect(self, url):
+		new_request = self._parse_request(url=url, handle=self.request.handle)
+		log.debug('Redirecting %s to %s', self.request.path, new_request.path)
+		self._request = new_request
+		return self._dispatch(new_request.path)
+
+	def run(self):
+		self._request = self._parse_request()
+		items = self._dispatch(self.request.path)
+		if hasattr(self, '_unsynced_storages'):
+			for storage in self._unsynced_storages.values():
+				storage.close()
+		return items
 
 	def _dispatch(self, path):
 		for rule in self._routes:
@@ -857,21 +909,13 @@ class Plugin(XBMCMixin):
 				view_func, items = rule.match(path)
 			except NotFoundException:
 				continue
-			listitems = view_func(**items)
+			resp = view_func(**items)
 			if not self._end_of_directory and self.handle >= 0:
-				if listitems is None:
-					self.finish(succeeded=False)
-				else:
-					listitems = self.finish(listitems)
-			return listitems
+				if isinstance(resp, dict):
+					resp['items'] = self.finish(**resp)
+				elif isinstance(resp, collections.Iterable):
+					resp = self.finish(items=resp)
+			return resp
 		raise NotFoundException('No matching view found for %s' % path)
-
-	def run(self, test=False):
-		self._request = self._parse_request()
-		items = self._dispatch(self.request.path)
-		if hasattr(self, '_unsynced_storages'):
-			for storage in self._unsynced_storages.values():
-				storage.close()
-		return items
 
 plugin = Plugin()

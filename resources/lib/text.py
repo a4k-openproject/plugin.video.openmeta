@@ -1,5 +1,24 @@
 import re, time, copy, urllib, urlparse
 
+ACTION_REGEX = re.compile('(.*?)\((.*)\)')
+
+def escape(x):
+	x = x.replace('&', '%26')
+	x = x.replace('<', '%3C')
+	x = x.replace('>', '%3E')
+	x = x.replace(';', '%3B')
+	x = x.replace(':', '%3A')
+	x = x.replace('"', '%60%60')
+	x = x.replace("'", "%60")
+	return x
+
+def unescape(x):
+	x = x.replace('&dot;', '.')
+	x = x.replace('&sbo;', '[')
+	x = x.replace('&sbc;', ']')
+	x = x.replace('&colon;', ':')
+	return x
+
 def page_redux(page):
 	pages  = []
 	if '|' in page:
@@ -161,14 +180,7 @@ def date_to_timestamp(date_str, format='%Y-%m-%d'):
 	return None
 
 def apply_text_actions(text, dictionary):
-	def unescape(x):
-		x = x.replace('&dot;', '.')
-		x = x.replace('&sbo;', '[')
-		x = x.replace('&sbc;', ']')
-		x = x.replace('&colon;', ':')
-		return x
 	splitted_text = text.split('|')
-	ACTION_REGEX = re.compile('(.*?)\((.*)\)')
 	if splitted_text[0] in dictionary:
 		value = dictionary.get(splitted_text[0])
 		for action in splitted_text[1:]:
