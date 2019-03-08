@@ -2,7 +2,7 @@
 <settings>
 	<category label="General">
 		<setting label="Setup" type="lsep"/>
-		<setting label="Players URL" id="players_update_url" type="text" default=""/>
+		<setting label="Players URL" id="players_update_url" type="text" default="http://bit.ly/openplayers"/>
 		<setting label="Install or update players from URL..." type="action" subsetting="true" option="close" enable="!eq(-1,)" action="RunPlugin(plugin://plugin.video.openmeta/update_players)"/>
 		<setting label="Total setup..." option="close" type="action" action="RunPlugin(plugin://plugin.video.openmeta/setup/total)"/>
 		<setting label="Total setup Done" id="total_setup_done" type="bool" default="false" visible="false"/>
