@@ -109,10 +109,7 @@ def trakt_movies_latest_releases(raw=False):
 	if raw:
 		return results
 	else:
-		genres_dict = dict([(x['slug'], x['name']) for x in Trakt.get_genres('movies')])
-		movies = [meta_info.get_trakt_movie_metadata(item['movie'], genres_dict) for item in results]
-		items = [make_movie_item(movie) for movie in movies]
-		return items
+		return list_trakt_movies(results)
 
 @plugin.route('/movies/trakt/random_latest_releases')
 def trakt_movies_play_random_latest_releases():
@@ -409,7 +406,7 @@ def list_trakt_search_items(results, pages, page):
 			})
 	return items
 
-def list_trakt_movies(results, pages, page):
+def list_trakt_movies(results, pages=1, page=1):
 	genres_dict = dict([(x['slug'], x['name']) for x in Trakt.get_genres('movies')])
 	movies = [meta_info.get_trakt_movie_metadata(item['movie'], genres_dict) for item in results]
 	items = [make_movie_item(movie) for movie in movies]
