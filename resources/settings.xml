@@ -14,6 +14,7 @@
         <setting label="Movies Batch Add File Path" id="movies_batch_add_file_path" type="text" default="special://profile/addon_data/plugin.video.openmeta/movies_to_add.txt" visible="false"/>
         <setting label="TV Shows Batch Add File Path" id="tv_batch_add_file_path" type="text" default="special://profile/addon_data/plugin.video.openmeta/shows_to_add.txt" visible="false"/>
 		<setting label="Miscellaneous" type="lsep"/>
+        <setting label="Trakt Items Per Page" id="trakt_items_per_page" type="slider" range="10,1,100" option="int" default="10"/>
 		<setting label="Pages to consider for random playback" id="random_pages" type="number" default="3"/>
 		<setting label="Clear cache..." type="action" action="RunPlugin(plugin://plugin.video.openmeta/clear_cache)"/>
 	</category>

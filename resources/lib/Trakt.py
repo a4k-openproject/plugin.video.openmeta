@@ -6,6 +6,7 @@ from resources.lib.xswift2 import plugin
 title = 'Authenticate Trakt'
 msg1  = 'Do you want to authenticate with Trakt now?'
 msg2  = 'Please go to  https://trakt.tv/activate  and enter this code: '
+limit =  plugin.get_setting('trakt_items_per_page', int)
 
 TCI = plugin.get_setting('trakt_api_client_id', str)
 TCS = plugin.get_setting('trakt_api_client_secret', str)
@@ -173,7 +174,7 @@ def get_list(user, slug):
 	return call_trakt('users/%s/lists/%s/items' % (user, slug))
 
 def get_liked_lists(page):
-	result, pages = call_trakt('users/likes/lists?limit=10', pagination=True, page=page)
+	result, pages = call_trakt('users/likes/lists?limit=%s' % limit, pagination=True, page=page)
 	return result, pages
 
 def get_watchlist(type):
@@ -216,7 +217,7 @@ def get_movie(id):
 
 @plugin.cached(TTL=60, cache='Trakt')
 def search_for_list(list_name, page):
-	results, pages = call_trakt('search?type=list&query=%s&limit=10' % list_name, pagination=True, page=page)
+	results, pages = call_trakt('search?type=list&query=%s&limit=%s' % (list_name, limit), pagination=True, page=page)
 	return results, pages
 
 @plugin.cached(TTL=60, cache='Trakt')
@@ -226,12 +227,12 @@ def search_for_movie(movie_title, page):
 
 @plugin.cached(TTL=60, cache='Trakt')
 def search_for_movie_paginated(movie_title, page):
-	results, pages = call_trakt('search?type=movie&query=%s&limit=10' % movie_title, pagination=True, page=page)
+	results, pages = call_trakt('search?type=movie&query=%s&limit=%s' % (movie_title, limit), pagination=True, page=page)
 	return results, pages
 
 @plugin.cached(TTL=60, cache='Trakt')
 def search_for_tvshow_paginated(show_name, page):
-	results, pages = call_trakt('search?type=show&query=%s&limit=10' % show_name, pagination=True, page=page)
+	results, pages = call_trakt('search?type=show&query=%s&limit=%s' % (show_name, limit), pagination=True, page=page)
 	return results, pages
 
 @plugin.cached(TTL=60, cache='Trakt')
@@ -253,7 +254,7 @@ def get_next_episodes():
 
 @plugin.cached(TTL=60, cache='Trakt')
 def get_netflix_collected_shows(page):
-	result, pages = call_trakt('shows/collected/weekly?networks=Netflix&extended=full&limit=10', pagination=True, page=page, with_auth=False)
+	result, pages = call_trakt('shows/collected/weekly?networks=Netflix&extended=full&limit=%s' % limit, pagination=True, page=page, with_auth=False)
 	return result, pages
 
 @plugin.cached(TTL=60, cache='Trakt')
@@ -262,49 +263,49 @@ def get_latest_releases_movies():
 
 @plugin.cached(TTL=60, cache='Trakt')
 def get_imdb_top_rated_movies(page):
-	result, pages = call_trakt('users/justin/lists/imdb-top-rated-movies/items?extended=full&limit=10', pagination=True, page=page, with_auth=False)
+	result, pages = call_trakt('users/justin/lists/imdb-top-rated-movies/items?extended=full&limit=%s' % limit, pagination=True, page=page, with_auth=False)
 	return result, pages
 
 @plugin.cached(TTL=60, cache='Trakt')
 def get_trending_shows_paginated(page):
-	result, pages = call_trakt('shows/trending?extended=full&limit=10', pagination=True, page=page, with_auth=False)
+	result, pages = call_trakt('shows/trending?extended=full&limit=%s' % limit, pagination=True, page=page, with_auth=False)
 	return result, pages
 
 @plugin.cached(TTL=60, cache='Trakt')
 def get_popular_shows_paginated(page):
-	result, pages = call_trakt('shows/popular?extended=full&limit=10', pagination=True, page=page, with_auth=False)
+	result, pages = call_trakt('shows/popular?extended=full&limit=%s' % limit, pagination=True, page=page, with_auth=False)
 	return result, pages
 
 @plugin.cached(TTL=60, cache='Trakt')
 def get_watched_shows_paginated(page):
-	result, pages = call_trakt('shows/watched/weekly?extended=full&limit=10', pagination=True, page=page, with_auth=False)
+	result, pages = call_trakt('shows/watched/weekly?extended=full&limit=%s' % limit, pagination=True, page=page, with_auth=False)
 	return result, pages
 
 @plugin.cached(TTL=60, cache='Trakt')
 def get_collected_shows_paginated(page):
-	result, pages = call_trakt('shows/collected/weekly?extended=full&limit=10', pagination=True, page=page, with_auth=False)
+	result, pages = call_trakt('shows/collected/weekly?extended=full&limit=%s' % limit, pagination=True, page=page, with_auth=False)
 	return result, pages
 
 @plugin.cached(TTL=60, cache='Trakt')
 def get_trending_movies_paginated(page):
-	result, pages = call_trakt('movies/trending?extended=full&limit=10', pagination=True, page=page, with_auth=False)
+	result, pages = call_trakt('movies/trending?extended=full&limit=%s' % limit, pagination=True, page=page, with_auth=False)
 	return result, pages
 
 @plugin.cached(TTL=60, cache='Trakt')
 def get_popular_movies_paginated(page):
-	result, pages = call_trakt('movies/popular?extended=full&limit=10', pagination=True, page=page, with_auth=False)
+	result, pages = call_trakt('movies/popular?extended=full&limit=%s' % limit, pagination=True, page=page, with_auth=False)
 	return result, pages
 
 @plugin.cached(TTL=60, cache='Trakt')
 def get_watched_movies_paginated(page):
-	result, pages = call_trakt('movies/watched/weekly?extended=full&limit=10', pagination=True, page=page, with_auth=False)
+	result, pages = call_trakt('movies/watched/weekly?extended=full&limit=%s' % limit, pagination=True, page=page, with_auth=False)
 	return result, pages
 
 @plugin.cached(TTL=60, cache='Trakt')
 def get_collected_movies_paginated(page):
-	result, pages = call_trakt('movies/collected/weekly?extended=full&limit=10', pagination=True, page=page, with_auth=False)
+	result, pages = call_trakt('movies/collected/weekly?extended=full&limit=%s' % limit, pagination=True, page=page, with_auth=False)
 	return  result, pages
 
 @plugin.cached(TTL=60, cache='Trakt')
 def get_related_movies_paginated(imdb_id, page):
-	return call_trakt('movies/%s/related?extended=full&limit=10' % imdb_id, pagination=True, page=page, with_auth=False)
+	return call_trakt('movies/%s/related?extended=full&limit=%s' % (imdb_id, limit), pagination=True, page=page, with_auth=False)
