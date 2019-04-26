@@ -363,7 +363,6 @@ def tvmaze_play_episode(id, season, episode, title=None):
 
 def get_episode_parameters(show, season, episode):
 	from resources.lib.TheMovieDB import Find
-	articles = ['a ', 'A ', 'An ', 'an ', 'The ', 'the ']
 	if season in show and episode in show[season]:
 		season_obj = show[season]
 		episode_obj = show[season][episode]
@@ -382,9 +381,9 @@ def get_episode_parameters(show, season, episode):
 		try:
 			if text.number_to_text(season) in (season, ''):
 				if int(str(season)[-1]) in NTH:
-					parameters['season_ordinal'] = '%s%s' % (DCD[int(str(season)[-2])], NTH[int(str(season)[-1])])
+					parameters['season_ordinal'] = '%s%s' % (DCS[int(str(season)[-2])], NTH[int(str(season)[-1])])
 				else:
-					parameters['season_ordinal'] = '%s%sth' % (DCD[int(str(season)[-2])], text.number_to_text(int(str(season)[-1])))
+					parameters['season_ordinal'] = '%s%sth' % (DCS[int(str(season)[-2])], text.number_to_text(int(str(season)[-1])))
 			else:
 				parameters['season_ordinal'] = '%sth' % text.number_to_text(season)
 		except:
@@ -399,31 +398,26 @@ def get_episode_parameters(show, season, episode):
 		parameters['network_clean'] = re.sub('(\(.*?\))', '', network).strip()
 	else:
 		parameters['network_clean'] = network
-	parameters['showname'] = show['seriesname'].replace('&', '%26')
-	parameters['clearname'] = re.sub('(\(.*?\))', '', show['seriesname']).strip()
-	parameters['stripname'] = ' '.join(re.compile('[\W_]+').sub(' ', show['seriesname']).split())
-	parameters['sortname'] = text.to_utf8(parameters['clearname'])
-	for article in articles:
-		if text.to_utf8(parameters['clearname']).startswith(article):
-			parameters['sortname'] = text.to_utf8(parameters['clearname']).replace(article,'')
-	parameters['urlname'] = urllib.quote(text.to_utf8(parameters['clearname']))
-	articles = ['a ', 'A ', 'An ', 'an ', 'The ', 'the ']
-	parameters['sortname'] = text.to_utf8(parameters['clearname'])
-	for article in articles:
-		if text.to_utf8(parameters['clearname']).startswith(article):
-			parameters['sortname'] = text.to_utf8(parameters['clearname']).replace(article,'')
-	parameters['shortname'] = text.to_utf8(parameters['clearname'][1:-1])
 	try:
 		parameters['absolute_number'] = int(episode_obj.get('absolute_number'))
 	except:
 		parameters['absolute_number'] = count + episode
+	parameters['showname'] = show['seriesname'].replace('&', '%26')
+	parameters['clearname'] = re.sub('(\(.*?\))', '', show['seriesname']).strip()
+	parameters['stripname'] = ' '.join(re.compile('[\W_]+').sub(' ', show['seriesname']).split())
+	parameters['sortname'] = text.to_utf8(parameters['clearname'])
+	parameters['urlname'] = urllib.quote(text.to_utf8(parameters['clearname']))
+	parameters['shortname'] = text.to_utf8(parameters['clearname'][1:-1])
 	parameters['title'] = text.escape(episode_obj.get('episodename', str(episode)))
 	parameters['urltitle'] = urllib.quote(text.to_utf8(parameters['title']))
 	parameters['sorttitle'] = text.to_utf8(parameters['title'])
+	parameters['shorttitle'] = text.to_utf8(parameters['title'][1:-1])
+	articles = ['a ', 'A ', 'An ', 'an ', 'The ', 'the ']
 	for article in articles:
+		if text.to_utf8(parameters['clearname']).startswith(article):
+			parameters['sortname'] = text.to_utf8(parameters['clearname']).replace(article,'')
 		if text.to_utf8(parameters['title']).startswith(article):
 			parameters['sorttitle'] = text.to_utf8(parameters['title']).replace(article,'')
-	parameters['shorttitle'] = text.to_utf8(parameters['title'][1:-1])
 	parameters['firstaired'] = episode_obj.get('firstaired')
 	parameters['series_firstaired'] = show.get('firstaired')
 	parameters['year'] = show.get('year', 0)
@@ -461,14 +455,12 @@ def get_episode_parameters(show, season, episode):
 		parameters['votes'] = episode_obj.get('ratingcount')
 	else:
 		parameters['votes'] = show['ratingcount']
-	parameters['writers'] = episode_obj.get('Writer')
-	parameters['directors'] = episode_obj.get('Director')
+	parameters['mpaa'] = show.get('contentrating')
+	parameters['writers'] = episode_obj.get('writer')
+	parameters['directors'] = episode_obj.get('director')
 	parameters['status'] = show.get('status')
-	parameters['mpaa'] = show.get('ContentRating')
 	if show.get('actors') != None and show.get('actors') != '':
 		parameters['actors'] = re.sub(r'\<[^)].*?\>', '', show.get('actors'))
-	else:
-		parameters['actors'] = ''
 	if show.get('genre') != None and '|' in show.get('genre'):
 		parameters['genres'] = show.get('genre').replace('|',' / ')[3:-3]
 	else:
@@ -504,7 +496,7 @@ def get_episode_parameters(show, season, episode):
 		if trakt_ids['slug'] != '' and trakt_ids['slug'] != None:
 			parameters['slug'] = trakt_ids['slug']
 		else:
-			parameters['slug'] = parameters['clearname'].lower().replace('~','').replace('#','').replace('%','').replace('&','').replace('*','').replace('{','').replace('}','').replace('\\','').replace(':','').replace('<','').replace('>','').replace('?','').replace('/','').replace('+','').replace('|','').replace('"','').replace(' ','-')
+			parameters['slug'] = text.clean_title(parameters['clearname'].lower())
 	return parameters
 
 def get_tmdb_episode_parameters(show, preason, prepisode):

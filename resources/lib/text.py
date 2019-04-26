@@ -3,20 +3,52 @@ import re, time, copy, urllib, urlparse
 ACTION_REGEX = re.compile('(.*?)\((.*)\)')
 
 def escape(x):
-	x = x.replace('&', '%26')
-	x = x.replace('<', '%3C')
-	x = x.replace('>', '%3E')
-	x = x.replace(';', '%3B')
-	x = x.replace(':', '%3A')
-	x = x.replace('"', '%60%60')
-	x = x.replace("'", "%60")
-	return x
+	if x and x != None:
+		x = x.replace('\n', '%20')
+		x = x.replace('#', '%23')
+		x = x.replace('&', '%26')
+		x = x.replace("'", '%27')
+		x = x.replace('"', '%27%27')
+		x = x.replace('(', '%28')
+		x = x.replace(')', '%29')
+		x = x.replace(',', '%2C')
+		x = x.replace('-', '%2D')
+		x = x.replace(':', '%3A')
+		x = x.replace(';', '%3B')
+		x = x.replace('<', '%3C')
+		x = x.replace(']', '%3D')
+		x = x.replace('>', '%3E')
+		x = x.replace('[', '%5B')
+		x = x.replace('{', '%7B')
+		x = x.replace('}', '%7D')
+		return x
 
 def unescape(x):
 	x = x.replace('&dot;', '.')
 	x = x.replace('&sbo;', '[')
 	x = x.replace('&sbc;', ']')
 	x = x.replace('&colon;', ':')
+	return x
+
+def clean_title(x):
+	x = x.replace('~','')
+	x = x.replace('#','')
+	x = x.replace('%','')
+	x = x.replace('&','')
+	x = x.replace('*','')
+	x = x.replace('{','')
+	x = x.replace('}','')
+	x = x.replace(':','')
+	x = x.replace('<','')
+	x = x.replace('>','')
+	x = x.replace('?','')
+	x = x.replace('/','')
+	x = x.replace('+','')
+	x = x.replace('|','')
+	x = x.replace('"','')
+	x = x.replace('\\','')
+	x = x.replace(' ','-')
+	x = x.replace('--','-')
 	return x
 
 def page_redux(page):

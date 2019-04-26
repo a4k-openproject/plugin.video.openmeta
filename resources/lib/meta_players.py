@@ -11,16 +11,13 @@ class AddonPlayer(object):
 		self.commands = meta.get(media, [])
 
 	def is_empty(self):
-		try:
-			if ',' in self.pluginid:
-				PLUGINS = [xbmc.getCondVisibility('System.HasAddon(%s)' % p) for p in self.pluginid.split(',')]
-				if False in PLUGINS:
-					return True
-			elif self.pluginid and not xbmc.getCondVisibility('System.HasAddon(%s)' % self.pluginid):
+		if ',' in self.pluginid:
+			PLUGINS = [xbmc.getCondVisibility('System.HasAddon(%s)' % p) for p in self.pluginid.split(',')]
+			if False in PLUGINS:
 				return True
-			return not bool(self.commands)
-		except:
+		elif self.pluginid and not xbmc.getCondVisibility('System.HasAddon(%s)' % self.pluginid):
 			return True
+		return not bool(self.commands)
 
 def get_players(media):
 	assert media in ('tvshows', 'movies')

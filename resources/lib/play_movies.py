@@ -131,9 +131,11 @@ def get_movie_parameters(movie):
 		parameters['fanart'] = 'https://image.tmdb.org/t/p/original%s' % str(movie['backdrop_path'])
 	parameters['now'] = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
 	trakt_ids = play_base.get_trakt_ids('tmdb', movie['id'], parameters['title'], 'movie', parameters['year'])
-	if 'slug' in trakt_ids:
-		if trakt_ids['slug'] != '' and trakt_ids['slug'] != None:
+	if 'slug' in trakt_ids and trakt_ids['slug'] != '' and trakt_ids['slug'] != None:
+		try:
 			parameters['slug'] = trakt_ids['slug']
-		else:
-			parameters['slug'] = parameters['title'].lower().replace('~','').replace('#','').replace('%','').replace('&','').replace('*','').replace('{','').replace('}','').replace('\\','').replace(':','').replace('<','').replace('>','').replace('?','').replace('/','').replace('+','').replace('|','').replace('"','').replace(' ','-').replace('--','-')
+		except:
+			pass
+	else:
+		parameters['slug'] = text.clean_title(parameters['title'].lower())
 	return parameters
