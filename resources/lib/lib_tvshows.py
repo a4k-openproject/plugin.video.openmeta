@@ -54,7 +54,7 @@ def add_tvshow_to_library(library_folder, show):
 		nfo_filepath = os.path.join(show_folder, 'tvshow.nfo')
 		if not xbmcvfs.exists(nfo_filepath):
 			nfo_file = xbmcvfs.File(nfo_filepath, 'w')
-			content = 'https://thetvdb.com/?tab=series&id=%s' % str(id)
+			content = 'http://thetvdb.com/?tab=series&id=%s' % str(id)
 			nfo_file.write(content)
 			nfo_file.close()
 	ids = [id, show.get('imdb_id', None)]
@@ -107,9 +107,9 @@ def batch_add_tvshows_to_library(library_folder, show):
 
 def library_tv_remove_strm(show, folder, id, season, episode):
 	enc_season = ('Season %s' % season).translate(None, '\/:*?"<>|').strip('.')
-	enc_name = '%s - S%02dE%02d' % (text.to_utf8(show['seriesname']), season, episode)
+	enc_name = '%s - S%02dE%02d.strm' % (text.clean_title(show['seriesname']), season, episode)
 	season_folder = os.path.join(folder, enc_season)
-	stream_file = os.path.join(season_folder, enc_name + '.strm')
+	stream_file = os.path.join(season_folder, enc_name)
 	if xbmcvfs.exists(stream_file):
 		xbmcvfs.delete(stream_file)
 		while not xbmc.Monitor().abortRequested() and xbmcvfs.exists(stream_file):
@@ -127,8 +127,8 @@ def library_tv_strm(show, folder, id, season, episode):
 		xbmcvfs.mkdir(folder)
 	except:
 		pass
-	enc_name = '%s - S%02dE%02d' % (text.to_utf8(show['seriesname'].replace(': ', ' - ')), season, episode)
-	stream = os.path.join(folder, enc_name + '.strm')
+	enc_name = '%s - S%02dE%02d.strm' % (text.clean_title(show['seriesname']), season, episode)
+	stream = os.path.join(folder, enc_name)
 	if not xbmcvfs.exists(stream):
 		file = xbmcvfs.File(stream, 'w')
 		content = plugin.url_for('tv_play', id=id, season=season, episode=episode)
