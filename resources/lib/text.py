@@ -1,6 +1,20 @@
-import re, time, copy, urllib, urlparse
+import re, time, urllib, urlparse
 
 ACTION_REGEX = re.compile('(.*?)\((.*)\)')
+
+
+def deepcopy(obj):
+	out = dict().fromkeys(obj)
+	for k, v in obj.iteritems():
+		try:
+			out[k] = v.copy()
+		except AttributeError:
+			try:
+				out[k] = v[:]
+			except TypeError:
+				out[k] = v
+	return out
+
 
 def escape(x):
 	if x and x != None:
@@ -47,7 +61,6 @@ def clean_title(x):
 	x = x.replace('|','')
 	x = x.replace('"','')
 	x = x.replace('\\','')
-	x = x.replace(' ','-')
 	x = x.replace('--','-')
 	return x
 
@@ -79,7 +92,7 @@ def to_utf8(obj):
 	if isinstance(obj, unicode):
 		obj = obj.encode('utf-8', 'ignore')
 	elif isinstance(obj, dict):
-		obj = copy.deepcopy(obj)
+		obj = deepcopy(obj)
 		for key, val in obj.items():
 			obj[key] = to_utf8(val)
 	elif obj is not None and hasattr(obj, '__iter__'):
@@ -95,7 +108,7 @@ def to_unicode(obj):
 		except TypeError:
 			pass
 	elif isinstance(obj, dict):
-		obj = copy.deepcopy(obj)
+		obj = deepcopy(obj)
 		for key, val in obj.items():
 			obj[key] = to_unicode(val)
 	elif obj is not None and hasattr(obj, '__iter__'):
