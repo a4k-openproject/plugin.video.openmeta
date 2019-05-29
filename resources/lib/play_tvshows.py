@@ -402,8 +402,8 @@ def get_episode_parameters(show, season, episode):
 		parameters['absolute_number'] = int(episode_obj.get('absolute_number'))
 	except:
 		parameters['absolute_number'] = count + episode
-	parameters['showname'] = show['seriesname'].replace('&', '%26')
-	parameters['clearname'] = re.sub('(\(.*?\))', '', show['seriesname']).strip()
+	parameters['showname'] = text.escape(show['seriesname'])
+	parameters['clearname'] = text.escape(show['seriesname'])
 	parameters['stripname'] = ' '.join(re.compile('[\W_]+').sub(' ', show['seriesname']).split())
 	parameters['sortname'] = text.to_utf8(parameters['clearname'])
 	parameters['urlname'] = urllib.quote(text.to_utf8(parameters['clearname']))
@@ -511,8 +511,8 @@ def get_tmdb_episode_parameters(show, preason, prepisode):
 		parameters['network_clean'] = network
 	parameters['imdb'] = show['external_ids']['imdb_id']
 	parameters['tmdb'] = show['id']
-	parameters['showname'] = show['name']
-	parameters['clearname'] = re.sub('(\(.*?\))', '', show['name']).strip()
+	parameters['showname'] = text.escape(show['seriesname'])
+	parameters['clearname'] = text.escape(show['seriesname'])
 	parameters['urlname'] = urllib.quote(text.to_utf8(parameters['clearname']))
 	articles = ['a ', 'A ', 'An ', 'an ', 'The ', 'the ']
 	parameters['sortname'] = text.to_utf8(parameters['clearname'])
@@ -577,8 +577,8 @@ def get_trakt_episode_parameters(show, preason, prepisode):
 		parameters['network_clean'] = network
 	parameters['imdb'] = show['external_ids']['imdb_id']
 	parameters['tmdb'] = show['id']
-	parameters['showname'] = show['name']
-	parameters['clearname'] = re.sub('(\(.*?\))', '', show['name']).strip()
+	parameters['showname'] = text.escape(show['seriesname'])
+	parameters['clearname'] = text.escape(show['seriesname'])
 	parameters['urlname'] = urllib.quote(text.to_utf8(parameters['clearname']))
 	articles = ['a ', 'A ', 'An ', 'an ', 'The ', 'the ']
 	parameters['sortname'] = text.to_utf8(parameters['clearname'])
@@ -643,8 +643,8 @@ def get_tvmaze_episode_parameters(show, preason, prepisode):
 		parameters['network_clean'] = network
 	parameters['imdb'] = show['externals']['imdb']
 	parameters['tvrage'] = show['externals']['tvrage']
-	parameters['showname'] = show['name']
-	parameters['clearname'] = re.sub('(\(.*?\))', '', show['name']).strip()
+	parameters['showname'] = text.escape(show['seriesname'])
+	parameters['clearname'] = text.escape(show['seriesname'])
 	parameters['urlname'] = urllib.quote(text.to_utf8(parameters['clearname']))
 	articles = ['a ', 'A ', 'An ', 'an ', 'The ', 'the ']
 	parameters['sortname'] = text.to_utf8(parameters['clearname'])
