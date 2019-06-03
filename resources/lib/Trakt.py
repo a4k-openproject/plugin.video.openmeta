@@ -67,15 +67,11 @@ def call_trakt(path, params={}, data=None, is_delete=False, with_auth=True, pagi
 		response, numpages = paginated_query(page)
 		return response, numpages
 
-def search_trakt(**search_params):
-	return call_trakt('search', search_params)
+def search_trakt(id_type, id, type):
+	return call_trakt('search/%s/%s?type=%s' % (id_type, id, type))
 
-def find_trakt_ids(id_type, id, query=None, type=None, year=None):
-	response = search_trakt(id_type=id_type, id=id)
-	if not response and query:
-		response = search_trakt(query=query, type=type, year=year)
-		if response and len(response) > 1:
-			response = [r for r in response if r[r['type']]['title'] == query]
+def find_trakt_ids(id_type, id, type):
+	response = search_trakt(id_type, id, type)
 	if response:
 		content = response[0]
 		return content[content['type']]['ids']

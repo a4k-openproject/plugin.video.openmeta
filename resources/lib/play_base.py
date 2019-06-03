@@ -19,9 +19,9 @@ def play_by_label(label):
 		xbmc.executebuiltin('%s/tv/play_by_name/%s/%s/%s/%s/en)' % (base, info('ListItem.TVShowTitle'), info('ListItem.Season'), info('ListItem.Episode'), label))
 
 @plugin.cached(TTL=60, cache='Trakt')
-def get_trakt_ids(*args, **kwargs):
+def get_trakt_ids(id_type, id, type):
 	try:
-		return Trakt.find_trakt_ids(*args, **kwargs)
+		return Trakt.find_trakt_ids(id_type, id, type)
 	except:
 		return None
 

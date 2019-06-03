@@ -28,7 +28,7 @@ def play_episode(id, season, episode):
 		xbmc.executebuiltin('Action(Info)')
 		play_base.action_cancel()
 		return
-	trakt_ids = play_base.get_trakt_ids('tvdb', id, show['seriesname'], 'show', show.get('year', 0))
+	trakt_ids = play_base.get_trakt_ids(id_type='tvdb', id=id, type='show')
 	params = {}
 	for lang in meta_players.get_needed_langs(players):
 		tvdb_data = show
@@ -87,7 +87,7 @@ def tmdb_play_episode(id, season, episode):
 		year = show['first_air_date'][:4]
 	else:
 		year = None
-	trakt_ids = play_base.get_trakt_ids('tmdb', id)
+	trakt_ids = play_base.get_trakt_ids(id_type='tmdb', id=id, type='show')
 	if 'status_code' in show:
 		return trakt_play_episode(trakt_ids['trakt'], season, episode)
 	if 'name' in show:
@@ -119,7 +119,7 @@ def tmdb_play_episode(id, season, episode):
 	players = [p for p in players if p.id == play_plugin] or players
 	if not players:
 		return xbmc.executebuiltin('Action(Info)')
-	trakt_ids = play_base.get_trakt_ids('tmdb', id, show_info['name'], 'show', show['first_air_date'][:4])
+	trakt_ids = play_base.get_trakt_ids(id_type='tmdb', id=id, type='show')
 	params = {}
 	for lang in meta_players.get_needed_langs(players):
 		if show['name'] is None:
@@ -182,7 +182,7 @@ def trakt_play_episode(id, season, episode):
 			year = show['first_aired'][:4]
 		else:
 			year = None
-		trakt_ids = play_base.get_trakt_ids('trakt', id, show_title, 'show', year)
+		trakt_ids = play_base.get_trakt_ids(id_type='trakt', id=id, type='show')
 		preason = get_season(id, season)
 		if preason:
 			prepisode = get_episode(id, season, episode)
@@ -281,13 +281,11 @@ def tvmaze_play_episode(id, season, episode, title=None):
 		dbid = None
 	if show['externals']:
 		if show['externals']['thetvdb']:
-			trakt_ids = play_base.get_trakt_ids('tvdb', show['externals']['thetvdb'], show['name'], 'show', show['premiered'][:4])
+			trakt_ids = play_base.get_trakt_ids(id_type='tvdb', id=show['externals']['thetvdb'], type='show')
 		elif show['externals']['imdb']:
-			trakt_ids = play_base.get_trakt_ids('imdb', show['externals']['imdb'], show['name'], 'show', show['premiered'][:4])
-		else:
-			trakt_ids = play_base.get_trakt_ids(query=show['name'], type='show', year=show['premiered'][:4])
+			trakt_ids = play_base.get_trakt_ids(id_type='imdb', id=show['externals']['imdb'], type='show')
 	else:
-		trakt_ids = play_base.get_trakt_ids(query=show['name'], type='show', year=show['premiered'][:4])
+		trakt_ids = None
 	show_info = meta_info.get_tvshow_metadata_tvmaze(show)
 	preasons = show['_embedded']['seasons']
 	for item in preasons:
@@ -491,7 +489,7 @@ def get_episode_parameters(show, season, episode):
 	else:
 		parameters['name'] = u'%s S%02dE%02d' % (parameters['showname'], parameters['season'], parameters['episode'])
 	parameters['now'] = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
-	trakt_ids = play_base.get_trakt_ids('tvdb', show['id'], parameters['clearname'], 'show', parameters['year'])
+	trakt_ids = play_base.get_trakt_ids(id_type='tvdb', id=show['id'], type='show')
 	if 'slug' in trakt_ids:
 		if trakt_ids['slug'] != '' and trakt_ids['slug'] != None:
 			parameters['slug'] = trakt_ids['slug']

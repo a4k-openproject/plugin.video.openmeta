@@ -16,7 +16,10 @@ def play_movie(tmdb_id):
 		return
 	movie = Movies(tmdb_id).info(language='en', append_to_response='external_ids,alternative_titles,credits,images,keywords,releases,translations,rating')
 	movie_info = meta_info.get_movie_metadata(movie)
-	trakt_ids = play_base.get_trakt_ids('tmdb', tmdb_id, movie['original_title'], 'movie', text.parse_year(movie['release_date']))
+	imdb_id = movie['imdb_id'] if 'imdb_id' in movie else None
+	id_type = 'imdb' if imdb_id and imdb_id.startswith('tt') else 'tmdb'
+	id = imdb_id if imdb_id and imdb_id.startswith('tt') else tmdb_id
+	trakt_ids = play_base.get_trakt_ids(id_type=id_type, id=id, type='movie')
 	params = {}
 	for lang in meta_players.get_needed_langs(players):
 		if lang == 'en':
@@ -130,7 +133,7 @@ def get_movie_parameters(movie):
 	else:
 		parameters['fanart'] = 'https://image.tmdb.org/t/p/original%s' % str(movie['backdrop_path'])
 	parameters['now'] = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
-	trakt_ids = play_base.get_trakt_ids('tmdb', movie['id'], parameters['title'], 'movie', parameters['year'])
+	trakt_ids = play_base.get_trakt_ids(id_type='tmdb', id=movie['id'], type='movie')
 	if 'slug' in trakt_ids and trakt_ids['slug'] != '' and trakt_ids['slug'] != None:
 		try:
 			parameters['slug'] = trakt_ids['slug']
