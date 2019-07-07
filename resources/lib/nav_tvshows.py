@@ -391,12 +391,7 @@ def list_trakt_episodes(result):
 		info = meta_info.get_tvshow_metadata_trakt(item['show'], genres_dict)
 		episode_info = meta_info.get_episode_metadata_trakt(info, episode)
 		episode_info['title'] = '%s (%02dx%02d): %s' % (tvshow_title, season_num, episode_num, episode_title)
-		if xbmc.getCondVisibility('system.hasaddon(script.extendedinfo)'):
-			context_menu = [
-				('OpenInfo', 'RunScript(script.extendedinfo,info=extendedepisodeinfo,tvshow=%s,season=%s,episode=%s)' % (tvshow_title, season_num, episode_num)),
-			('Choose OpenMeta Player', 'RunPlugin(%s)' % plugin.url_for('tv_play_choose_player', id=id, season=season_num, episode=episode_num, usedefault=False))]
-		else:
-			context_menu = []
+		context_menu = []
 		items.append(
 			{
 				'label': episode_info['title'],
@@ -549,12 +544,7 @@ def list_episodes_tvdb(id, season_num):
 		if not season_num == 0 and not episode.has_aired(flexible=False):
 			break
 		episode_info = meta_info.get_episode_metadata_tvdb(season_info, episode)
-		if xbmc.getCondVisibility('system.hasaddon(script.extendedinfo)'):
-			context_menu = [
-				('OpenInfo', 'RunScript(script.extendedinfo,info=extendedepisodeinfo,tvshow=%s,season=%s,episode=%s)' % (show_info['name'], season_num, episode_num)),
-			('Choose OpenMeta Player', 'RunPlugin(%s)' % plugin.url_for('tv_play_choose_player', id=id, season=season_num, episode=episode_num, usedefault=False))]
-		else:
-			context_menu = []
+		context_menu = []
 		items.append(
 			{
 				'label': episode_info['title'],

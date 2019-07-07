@@ -505,9 +505,7 @@ def make_movie_item(movie_info):
 		plugin.notify('tmdb or imdb id', 'not found', plugin.get_addon_icon(), 3000)
 	if xbmc.getCondVisibility('system.hasaddon(script.extendedinfo)'):
 		context_menu = [
-			('OpenInfo', 'RunScript(script.extendedinfo,info=extendedinfo,id=%s)' % id),
 			('Movie trailer', 'RunScript(script.extendedinfo,info=playtrailer,id=%s)' % id),
-			('Choose OpenMeta Player', 'RunPlugin(%s)' % plugin.url_for('movies_play_choose_player', src=src, id=id, usedefault=False)),
 			('Add to library','RunPlugin(%s)' % plugin.url_for('movies_add_to_library', src=src, id=id))]
 	else:
 		context_menu = [
