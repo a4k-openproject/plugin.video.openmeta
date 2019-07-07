@@ -425,8 +425,8 @@ def list_trakt_movies(results, pages=1, page=1):
 			})
 	return plugin.finish(items=items, sort_methods=SORTRAKT)
 
-@plugin.route('/movies/play/<src>/<id>')
-def movies_play(src, id):
+@plugin.route('/movies/play_choose_player/<src>/<id>/<usedefault>')
+def movies_play_choose_player(src, id, usedefault):
 	from resources.lib.TheMovieDB import Find
 	tmdb_id = None
 	if src == 'tmdb':
@@ -436,10 +436,14 @@ def movies_play(src, id):
 		tmdb_id = info['movie_results'][0]['id']
 	if not tmdb_id:
 		plugin.notify('tmdb id', 'not found', plugin.get_addon_icon(), 3000)
-	play_movies.play_movie(tmdb_id)
+	play_movies.play_movie(tmdb_id, usedefault)	
+
+@plugin.route('/movies/play/<src>/<id>')
+def movies_play(src, id, usedefault='True'):
+	movies_play_choose_player(src, id, usedefault)
 
 @plugin.route('/movies/play_by_name/<name>/<lang>')
-def movies_play_by_name(name, lang='en'):
+def movies_play_by_name(name, lang='en', usedefault='True'):
 	tools.show_busy()
 	from resources.lib.TheMovieDB import Search
 	items = Search().movie(query=name, language=lang, page=1)['results']
@@ -453,7 +457,11 @@ def movies_play_by_name(name, lang='en'):
 	tools.hide_busy()
 	if selection != -1:
 		id = items[selection]['id']
-		movies_play('tmdb', id)
+		movies_play_choose_player('tmdb', id, usedefault)
+
+@plugin.route('/movies/play_by_name_choose_player/<name>/<lang>/<usedefault>')
+def movies_play_by_name_choose_player(name, lang='en', usedefault='False'):
+	movies_play_by_name(name, lang, usedefault)
 
 def trakt_movies_play_random(movies, convert_list=False):
 	for movie in movies:
@@ -499,13 +507,14 @@ def make_movie_item(movie_info):
 		context_menu = [
 			('OpenInfo', 'RunScript(script.extendedinfo,info=extendedinfo,id=%s)' % id),
 			('Movie trailer', 'RunScript(script.extendedinfo,info=playtrailer,id=%s)' % id),
+			('Choose OpenMeta Player', 'RunPlugin(%s)' % plugin.url_for('movies_play_choose_player', src=src, id=id, usedefault=False)),
 			('Add to library','RunPlugin(%s)' % plugin.url_for('movies_add_to_library', src=src, id=id))]
 	else:
 		context_menu = [
 			('Add to library','RunPlugin(%s)' % plugin.url_for('movies_add_to_library', src=src, id=id))]
 	return {
 		'label': movie_info['title'],
-		'path': plugin.url_for('movies_play', src=src, id=id),
+		'path': plugin.url_for('movies_play', src=src, id=id, usedefault=True),
 		'context_menu': context_menu,
 		'thumbnail': movie_info['poster'],
 		'banner': movie_info['fanart'],

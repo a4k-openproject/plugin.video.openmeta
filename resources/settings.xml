@@ -5,6 +5,9 @@
 		<setting label="Players URL" id="players_update_url" type="text" default="http://bit.ly/openplayers"/>
 		<setting label="Install or update players from URL..." type="action" subsetting="true" option="close" enable="!eq(-1,)" action="RunPlugin(plugin://plugin.video.openmeta/update_players)"/>
 		<setting label="Total setup..." option="close" type="action" action="RunPlugin(plugin://plugin.video.openmeta/setup/total)"/>
+		<setting label="Set Default Players" type="action" action="RunPlugin(plugin://plugin.video.openmeta/defaultplayer)"/>
+        <setting label="Default Movie Player" type="text" subsetting="true" id="moviesdefault" enable="false" default="None"/>
+        <setting label="Default TV Show Player" type="text" subsetting="true" id="tvshowsdefault" enable="false" default="None"/>
 		<setting label="Total setup Done" id="total_setup_done" type="bool" default="false" visible="false"/>
 		<setting label="Library" type="lsep"/>
 		<setting label="Enable library updates?" id="library_updates" type="bool" default="true"/>
