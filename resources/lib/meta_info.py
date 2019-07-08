@@ -69,6 +69,7 @@ def get_trakt_movie_metadata(movie, genres_dict=None):
 
 def get_tvshow_metadata_trakt(show, genres_dict=None):
 	info = {}
+	info['mediatype'] = 'tvshow'
 	info['title'] = show['title']
 	info['year'] = show['year']
 	info['name'] = u'%s (%s)' % (info['title'], info['year'])
@@ -130,6 +131,7 @@ def get_tvshow_metadata_tvdb(tvdb_show, banners=True):
 	info['studio'] = tvdb_show.get('network','')
 	info['imdb_id'] = tvdb_show.get('imdb_id', '')
 	info['duration'] = int(tvdb_show.get('runtime') or 0)
+	info['mediatype'] = 'tvshow'
 	return info
 
 def get_tvshow_metadata_tmdb(show, genres_dict=None):
@@ -138,6 +140,7 @@ def get_tvshow_metadata_tmdb(show, genres_dict=None):
 		return info
 	if 'id' in show:
 		info['tmdb'] = str(show['id'])
+	info['mediatype'] = 'tvshow'
 	info['name'] = show['name']
 	info['title'] = show['name']
 	info['tvshowtitle'] = show['original_name']
@@ -165,6 +168,7 @@ def get_tvshow_metadata_tvmaze(show):
 		info['id'] = show['externals']['thetvdb']
 	if show['externals']['imdb'] is not None:
 		info['imdb'] = show['externals']['imdb']
+	info['mediatype'] = 'tvshow'
 	info['name'] = show['name']
 	info['title'] = show['name']
 	info['tvshowtitle'] = show['name']
