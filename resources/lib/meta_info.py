@@ -19,6 +19,7 @@ def get_movie_metadata(movie, genres_dict=None):
 	info['tmdb'] = str(movie['id'])
 	info['poster'] = u'https://image.tmdb.org/t/p/original%s' % movie['poster_path']
 	info['fanart'] = u'https://image.tmdb.org/t/p/original%s' % movie['backdrop_path']
+	info['mediatype'] = 'movie'
 	try:
 		info['genre'] = u' / '.join([x['name'] for x in movie['genres']])
 	except KeyError:
@@ -45,7 +46,9 @@ def get_trakt_movie_metadata(movie, genres_dict=None):
 		info['playcount'] = 1
 	info['tmdb'] = movie['ids'].get('tmdb')
 	info['trakt_id'] = movie['ids'].get('trakt_id')
+	info['imdbnumber'] = movie['ids'].get('imdb')
 	info['imdb_id'] = movie['ids'].get('imdb')
+	info['mediatype'] = 'movie'
 	if info['tmdb'] == None:
 		info['tmdb'] = ''
 	if info['trakt_id'] == None:
@@ -66,6 +69,7 @@ def get_trakt_movie_metadata(movie, genres_dict=None):
 
 def get_tvshow_metadata_trakt(show, genres_dict=None):
 	info = {}
+	info['mediatype'] = 'tvshow'
 	info['title'] = show['title']
 	info['year'] = show['year']
 	info['name'] = u'%s (%s)' % (info['title'], info['year'])
@@ -127,6 +131,7 @@ def get_tvshow_metadata_tvdb(tvdb_show, banners=True):
 	info['studio'] = tvdb_show.get('network','')
 	info['imdb_id'] = tvdb_show.get('imdb_id', '')
 	info['duration'] = int(tvdb_show.get('runtime') or 0)
+	info['mediatype'] = 'tvshow'
 	return info
 
 def get_tvshow_metadata_tmdb(show, genres_dict=None):
@@ -135,6 +140,7 @@ def get_tvshow_metadata_tmdb(show, genres_dict=None):
 		return info
 	if 'id' in show:
 		info['tmdb'] = str(show['id'])
+	info['mediatype'] = 'tvshow'
 	info['name'] = show['name']
 	info['title'] = show['name']
 	info['tvshowtitle'] = show['original_name']
@@ -162,6 +168,7 @@ def get_tvshow_metadata_tvmaze(show):
 		info['id'] = show['externals']['thetvdb']
 	if show['externals']['imdb'] is not None:
 		info['imdb'] = show['externals']['imdb']
+	info['mediatype'] = 'tvshow'
 	info['name'] = show['name']
 	info['title'] = show['name']
 	info['tvshowtitle'] = show['name']
@@ -219,6 +226,7 @@ def get_episode_metadata_tvdb(season_metadata, episode, banners=True):
 	info['plot'] = episode.get('overview','')
 	info['plotoutline'] = episode.get('overview','')
 	info['votes'] = episode.get('ratingcount','')
+	info['mediatype'] = 'episode'
 	if banners:
 		info['poster'] = episode['filename']
 	return info
@@ -227,6 +235,7 @@ def get_episode_metadata_tmdb(season_metadata, episode):
 	info = copy.deepcopy(season_metadata)
 	if episode == None or episode == '' or 'status_code' in str(episode):
 		return info
+	info['season'] = episode['season_number']
 	info['episode'] = episode['episode_number']
 	info['title'] = episode['name']
 	info['aired'] = episode['air_date']
@@ -235,6 +244,7 @@ def get_episode_metadata_tmdb(season_metadata, episode):
 	info['plot'] = episode['overview']
 	info['plotoutline'] = episode['overview']
 	info['votes'] = episode['vote_count']
+	info['mediatype'] = 'episode'
 	if episode['still_path']:
 		info['poster'] = u'https://image.tmdb.org/t/p/original%s' % episode['still_path']
 	elif season_metadata['poster']:
@@ -249,6 +259,7 @@ def get_episode_metadata_tmdb(season_metadata, episode):
 
 def get_episode_metadata_trakt(season_metadata, episode):
 	info = copy.deepcopy(season_metadata)
+	info['season'] = episode['season']
 	info['episode'] = episode.get('number')
 	info['title'] = episode.get('title','')
 	info['aired'] = episode.get('first_aired','')
@@ -257,6 +268,7 @@ def get_episode_metadata_trakt(season_metadata, episode):
 	info['plot'] = episode.get('overview','')
 	info['plotoutline'] = episode.get('overview','')
 	info['votes'] = episode.get('votes','')
+	info['mediatype'] = 'episode'
 	if not info['playcount'] and episode.get('watched'):
 		info['playcount'] = 1
 	return info
@@ -265,11 +277,13 @@ def get_episode_metadata_tvmaze(season_metadata, episode):
 	info = copy.deepcopy(season_metadata)
 	if episode == None or episode == '':
 		return info
+	info['season'] = episode['season']
 	info['episode'] = episode['number']
 	info['season'] = episode['season']
 	info['title'] = episode['name']
 	info['aired'] = episode['airdate']
 	info['premiered'] = episode['airdate']
+	info['mediatype'] = 'episode'
 	info['plot'] = re.sub(r'\<[^)].*?\>', '', str(episode['summary'])).replace('&amp;','&').replace('\t','')
 	info['plotoutline'] = re.sub(r'\<[^)].*?\>', '', str(episode['summary'])).replace('&amp;','&').replace('\t','')
 	if episode['image']:
