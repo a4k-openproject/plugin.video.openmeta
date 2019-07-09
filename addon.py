@@ -24,9 +24,7 @@ def setdefaultplayers():
 			play_base.action_cancel()
 			return
 		index = plugin.select('Play %s with...' %i, [player.title for player in players])
-		if index < 0:
-			plugin.set_setting(i + 'default', '')
-		else:
+		if index >= 0:
 			plugin.set_setting(i + 'default', players[index].title)
 
 @plugin.route('/clear_cache')
