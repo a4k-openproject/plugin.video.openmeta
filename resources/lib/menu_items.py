@@ -218,6 +218,12 @@ def movie_lists():
 			('Add to library', 'RunPlugin(%s)' % plugin.url_for('lists_trakt_movies_collection_to_library'))]
 	},
 	{
+		'label': 'Recommendations',
+		'path': plugin.url_for('trakt_movies_recommendations'),
+		'thumbnail': plugin.get_media_icon('traktrecommendations'),
+		'fanart': plugin.get_addon_fanart(),
+	},
+	{
 		'label': 'Watchlist',
 		'path': plugin.url_for('trakt_movies_watchlist'),
 		'thumbnail': plugin.get_media_icon('traktwatchlist'),
@@ -249,6 +255,12 @@ def tv_lists():
 		'fanart': plugin.get_addon_fanart(),
 		'context_menu': [
 			('Add to library', 'RunPlugin(%s)' % plugin.url_for('lists_trakt_tv_collection_to_library'))]
+	},
+	{
+		'label': 'Recommendations',
+		'path': plugin.url_for('trakt_tv_recommendations'),
+		'thumbnail': plugin.get_media_icon('traktrecommendations'),
+		'fanart': plugin.get_addon_fanart(),
 	},
 	{
 		'label': 'Watchlist',

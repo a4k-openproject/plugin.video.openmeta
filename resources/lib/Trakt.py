@@ -176,6 +176,9 @@ def get_liked_lists(page):
 def get_watchlist(type):
 	return call_trakt('sync/watchlist/%s?extended=full' % type)
 
+def get_recommendations(type):
+	return call_trakt('recommendations/%s?extended=full&ignore_collected=true&limit=%s' % (type, limit))
+
 @plugin.cached(TTL=60, cache='Trakt')
 def get_calendar():
 	return call_trakt('calendars/my/shows?extended=full')
