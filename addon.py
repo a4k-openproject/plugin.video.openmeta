@@ -5,7 +5,27 @@ from resources.lib import menu_items
 from resources.lib import lib_movies
 from resources.lib import lib_tvshows
 from resources.lib.xswift2 import plugin
+from resources.lib import meta_players
+from resources.lib import play_base
+import xbmc
 
+
+@plugin.route('/defaultplayer')
+def setdefaultplayers():
+	media = ['movies', 'tvshows']
+	none = {'name':'None'}
+	for i in media:
+		play_plugin = meta_players.ADDON_SELECTOR.id
+		players = meta_players.get_players(i)
+		players = [p for p in players if p.id == play_plugin] or players
+		players.append(meta_players.AddonPlayer('', '', none))
+		if not players or len(players) == 0:
+			xbmc.executebuiltin('Action(Info)')
+			play_base.action_cancel()
+			return
+		index = plugin.select('Play %s with...' %i, [player.title for player in players])
+		if index >= 0:
+			plugin.set_setting(i + 'default', players[index].title)
 
 @plugin.route('/clear_cache')
 def clear_cache():
