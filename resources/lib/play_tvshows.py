@@ -9,7 +9,7 @@ from resources.lib.xswift2 import plugin
 NTH = {1: 'first', 2: 'second', 3: 'third', 5: 'fifth', 8: 'eigth'}
 DCS = {2: 'twenty', 3: 'thirty', 4: 'fourty', 5: 'fifty', 6: 'sixty'}
 
-def play_episode(id, season, episode):
+def play_episode(id, season, episode, usedefault):
 	from resources.lib.TheTVDB import TVDB
 	id = int(id)
 	season = int(season)
@@ -28,6 +28,11 @@ def play_episode(id, season, episode):
 		xbmc.executebuiltin('Action(Info)')
 		play_base.action_cancel()
 		return
+	if usedefault == 'True':
+		default = plugin.get_setting('tvshowsdefault', unicode)
+		for player in players:
+			if player.title == default:
+			 	players = [player]
 	trakt_ids = play_base.get_trakt_ids(id_type='tvdb', id=id, type='show')
 	params = {}
 	for lang in meta_players.get_needed_langs(players):
@@ -178,7 +183,7 @@ def trakt_play_episode(id, season, episode):
 	elif 'title' in show:
 		show_title = show['title']
 	if show:
-		if show['first_aired']:
+		if show.get('first_aired', None):
 			year = show['first_aired'][:4]
 		else:
 			year = None

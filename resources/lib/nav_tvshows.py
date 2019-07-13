@@ -181,11 +181,12 @@ def get_tvdb_id_from_name(name, lang):
 		plugin.ok('TV show not found', 'no show information found for %s in tvdb' % text.to_utf8(name))
 	items = []
 	for show in search_results:
-		if 'firstaired' in show:
-			show['year'] = int(show['firstaired'].split('-')[0].strip())
-		else:
-			show['year'] = 'unknown'
-		items.append(show)
+		if show['seriesname'] == name:
+			if 'firstaired' in show:
+				show['year'] = int(show['firstaired'].split('-')[0].strip())
+			else:
+				show['year'] = 'unknown'
+			items.append(show)
 	if len(items) > 1:
 		selection = plugin.select('Choose TV Show', ['%s (%s)' % (text.to_utf8(s['seriesname']), s['year']) for s in items])
 	else:
@@ -200,15 +201,25 @@ def get_tvdb_id_from_imdb_id(imdb_id):
 		plugin.ok('TV show not found', 'no show information found for %s in tvdb' % imdb_id)
 	return tvdb_id
 
+@plugin.route('/tv/play_choose_player/<id>/<season>/<episode>/<usedefault>')
+def tv_play_choose_player(id, season, episode, usedefault):
+	play_tvshows.play_episode(id, season, episode, usedefault)
+
 @plugin.route('/tv/play/<id>/<season>/<episode>')
-def tv_play(id, season, episode):
-	play_tvshows.play_episode(id, season, episode)
+def tv_play(id, season, episode, usedefault='True'):
+	play_tvshows.play_episode(id, season, episode, usedefault)
 
 @plugin.route('/tv/play_by_name/<name>/<season>/<episode>/<lang>', options={'lang': 'en'})
-def tv_play_by_name(name, season, episode, lang):
+def tv_play_by_name(name, season, episode, lang, usedefault='True'):
 	tvdb_id = get_tvdb_id_from_name(name, lang)
 	if tvdb_id:
-		tv_play(tvdb_id, season, episode)
+		tv_play(tvdb_id, season, episode, usedefault)
+
+@plugin.route('/tv/play_by_name_choose_player/<name>/<season>/<episode>/<lang>/<usedefault>', options={'lang': 'en'})
+def tv_play_by_name_choose_player(name, season, episode, lang, usedefault='False'):
+	tvdb_id = get_tvdb_id_from_name(name, lang)
+	if tvdb_id:
+		tv_play(tvdb_id, season, episode, usedefault)
 
 @plugin.route('/tv/tvdb/<id>/')
 def tv_tvshow(id):
@@ -380,15 +391,11 @@ def list_trakt_episodes(result):
 		info = meta_info.get_tvshow_metadata_trakt(item['show'], genres_dict)
 		episode_info = meta_info.get_episode_metadata_trakt(info, episode)
 		episode_info['title'] = '%s (%02dx%02d): %s' % (tvshow_title, season_num, episode_num, episode_title)
-		if xbmc.getCondVisibility('system.hasaddon(script.extendedinfo)'):
-			context_menu = [
-				('OpenInfo', 'RunScript(script.extendedinfo,info=extendedepisodeinfo,tvshow=%s,season=%s,episode=%s)' % (tvshow_title, season_num, episode_num))]
-		else:
-			context_menu = []
+		context_menu = []
 		items.append(
 			{
 				'label': episode_info['title'],
-				'path': plugin.url_for('tv_play', id=id, season=season_num, episode=episode_num),
+				'path': plugin.url_for('tv_play', id=id, season=season_num, episode=episode_num, usedefault=True),
 				'context_menu': context_menu,
 				'info': episode_info,
 				'is_playable': True,
@@ -537,15 +544,11 @@ def list_episodes_tvdb(id, season_num):
 		if not season_num == 0 and not episode.has_aired(flexible=False):
 			break
 		episode_info = meta_info.get_episode_metadata_tvdb(season_info, episode)
-		if xbmc.getCondVisibility('system.hasaddon(script.extendedinfo)'):
-			context_menu = [
-				('OpenInfo', 'RunScript(script.extendedinfo,info=extendedepisodeinfo,tvshow=%s,season=%s,episode=%s)' % (show_info['name'], season_num, episode_num))]
-		else:
-			context_menu = []
+		context_menu = []
 		items.append(
 			{
 				'label': episode_info['title'],
-				'path': plugin.url_for('tv_play', id=id, season=season_num, episode=episode_num),
+				'path': plugin.url_for('tv_play', id=id, season=season_num, episode=episode_num, usedefault=True),
 				'context_menu': context_menu,
 				'info': episode_info,
 				'is_playable': True,

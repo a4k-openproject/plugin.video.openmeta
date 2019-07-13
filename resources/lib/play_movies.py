@@ -4,16 +4,23 @@ from resources.lib import text
 from resources.lib import meta_info
 from resources.lib import play_base
 from resources.lib import meta_players
+from resources.lib.xswift2 import plugin
 
-def play_movie(tmdb_id):
+def play_movie(tmdb_id, usedefault):
 	from resources.lib.TheMovieDB import Movies
 	play_plugin = meta_players.ADDON_SELECTOR.id
 	players = meta_players.get_players('movies')
+
 	players = [p for p in players if p.id == play_plugin] or players
 	if not players or len(players) == 0:
 		xbmc.executebuiltin('Action(Info)')
 		play_base.action_cancel()
 		return
+	if usedefault == 'True':
+		default = plugin.get_setting('moviesdefault', unicode)
+		for player in players:
+			if player.title == default:
+			 	players = [player]
 	movie = Movies(tmdb_id).info(language='en', append_to_response='external_ids,alternative_titles,credits,images,keywords,releases,translations,rating')
 	movie_info = meta_info.get_movie_metadata(movie)
 	imdb_id = movie['imdb_id'] if 'imdb_id' in movie else None
