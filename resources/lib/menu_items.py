@@ -221,7 +221,7 @@ def movie_lists():
 		'label': 'Recommendations',
 		'path': plugin.url_for('trakt_movies_recommendations'),
 		'thumbnail': plugin.get_media_icon('traktrecommendations'),
-		'fanart': plugin.get_addon_fanart(),
+		'fanart': plugin.get_addon_fanart()
 	},
 	{
 		'label': 'Watchlist',
@@ -260,7 +260,7 @@ def tv_lists():
 		'label': 'Recommendations',
 		'path': plugin.url_for('trakt_tv_recommendations'),
 		'thumbnail': plugin.get_media_icon('traktrecommendations'),
-		'fanart': plugin.get_addon_fanart(),
+		'fanart': plugin.get_addon_fanart()
 	},
 	{
 		'label': 'Watchlist',
