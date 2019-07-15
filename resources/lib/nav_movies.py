@@ -408,7 +408,10 @@ def list_trakt_search_items(results, pages, page):
 
 def list_trakt_movies(results, pages=1, page=1):
 	genres_dict = dict([(x['slug'], x['name']) for x in Trakt.get_genres('movies')])
-	movies = [meta_info.get_trakt_movie_metadata(item['movie'], genres_dict) for item in results]
+	try:
+		movies = [meta_info.get_trakt_movie_metadata(item['movie'], genres_dict) for item in results]
+	except KeyError:
+		movies = [meta_info.get_trakt_movie_metadata(item, genres_dict) for item in results]
 	items = [make_movie_item(movie) for movie in movies]
 	page = int(page)
 	pages = int(pages)
@@ -523,6 +526,14 @@ def make_movie_item(movie_info):
 		'stream_info': {'video': {}},
 		'info': movie_info
 		}
+
+@plugin.route('/my_trakt/movie_lists/movies/recommendations')
+def trakt_movies_recommendations(raw=False):
+	result = Trakt.get_recommendations('movies')
+	if raw:
+		return result
+	else:
+		return list_trakt_movies(result, '1', '1')
 
 @plugin.route('/my_trakt/movie_lists/movies/watchlist')
 def trakt_movies_watchlist(raw=False):
