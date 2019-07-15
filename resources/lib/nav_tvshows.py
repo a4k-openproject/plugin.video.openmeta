@@ -223,8 +223,23 @@ def tv_play_by_name_choose_player(name, season, episode, lang, usedefault='False
 
 @plugin.route('/tv/tvdb/<id>/')
 def tv_tvshow(id):
-	plugin.set_content('seasons')
-	return plugin.finish(items=list_seasons_tvdb(id), sort_methods=SORT)
+	flatten = plugin.get_setting('flatten.tvshows', int)
+	if flatten == 2:
+		plugin.set_content('episodes')
+		action = 'all'
+	elif flatten == 1:		
+		id = int(id)
+		show = TVDB[id]
+		if len(show.items()) == 1 or (len(show.items()) == 2 and show.items()[1][0] == 1):
+			plugin.set_content('episodes')
+			action = 'one'
+		else:
+			plugin.set_content('seasons')
+			action = 'none'
+	else:
+		plugin.set_content('seasons')
+		action = 'none'
+	return plugin.finish(items=list_seasons_tvdb(id, action), sort_methods=SORT)
 
 
 @plugin.route('/tv/tvdb/<id>/<season_num>/')
@@ -503,7 +518,7 @@ def make_tvshow_item(info):
 		}
 
 @plugin.cached(TTL=60)
-def list_seasons_tvdb(id):
+def list_seasons_tvdb(id, flatten):
 	id = int(id)
 	show = TVDB[id]
 	show_info = meta_info.get_tvshow_metadata_tvdb(show, banners=False)
@@ -514,21 +529,26 @@ def list_seasons_tvdb(id):
 		elif not season.has_aired(flexible=False):
 			continue
 		season_info = meta_info.get_season_metadata_tvdb(show_info, season)
-		if xbmc.getCondVisibility('system.hasaddon(script.extendedinfo)'):
-			context_menu = [
-				('OpenInfo', 'RunScript(script.extendedinfo,info=seasoninfo,tvshow=%s,season=%s)' % (show_info['name'], season_num))]
-		else:
-			context_menu = []
-		items.append(
-			{
-				'label': 'Season %s' % season_num,
-				'path': plugin.url_for('tv_season', id=id, season_num=season_num),
-				'context_menu': context_menu,
-				'info': season_info,
-				'thumbnail': season_info['poster'],
-				'poster': season_info['poster'],
-				'fanart': season_info['fanart']
-			})
+		if flatten == 'none':
+			if xbmc.getCondVisibility('system.hasaddon(script.extendedinfo)'):
+				context_menu = [
+					('OpenInfo', 'RunScript(script.extendedinfo,info=seasoninfo,tvshow=%s,season=%s)' % (show_info['name'], season_num))]
+			else:
+				context_menu = []
+			items.append(
+				{
+					'label': 'Season %s' % season_num,
+					'path': plugin.url_for('tv_season', id=id, season_num=season_num),
+					'context_menu': context_menu,
+					'info': season_info,
+					'thumbnail': season_info['poster'],
+					'poster': season_info['poster'],
+					'fanart': season_info['fanart']
+				})
+		elif flatten == 'all':
+			items += list_episodes_tvdb(id, season_num)
+	if flatten == 'one':
+		items = list_episodes_tvdb(id, '1')
 	return items
 
 @plugin.cached(TTL=60)
