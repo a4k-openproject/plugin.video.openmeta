@@ -167,7 +167,7 @@ def get_lists():
 
 @plugin.cached(TTL=60, cache='Trakt')
 def get_list(user, slug):
-	return call_trakt('users/%s/lists/%s/items' % (user, slug))
+	return call_trakt('users/%s/lists/%s/items?extended=full' % (user, slug))
 
 def get_liked_lists(page):
 	result, pages = call_trakt('users/likes/lists?limit=%s' % limit, pagination=True, page=page)
@@ -241,7 +241,7 @@ def get_next_episodes():
 		id = show['ids']['trakt']
 		if id in hidden_shows:
 			continue
-		response = call_trakt('shows/%s/progress/watched' % id)    
+		response = call_trakt('shows/%s/progress/watched?extended=full' % id)    
 		if response['next_episode']:
 			next_episode = response['next_episode']
 			next_episode['show'] = show
@@ -255,7 +255,7 @@ def get_netflix_collected_shows(page):
 
 @plugin.cached(TTL=60, cache='Trakt')
 def get_latest_releases_movies():
-	return call_trakt('users/giladg/lists/latest-releases/items', with_auth=False)
+	return call_trakt('users/giladg/lists/latest-releases/items?extended=full', with_auth=False)
 
 @plugin.cached(TTL=60, cache='Trakt')
 def get_imdb_top_rated_movies(page):
