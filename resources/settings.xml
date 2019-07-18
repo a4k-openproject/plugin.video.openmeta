@@ -10,6 +10,7 @@
         <setting label="Default TV Show Player" type="text" subsetting="true" id="tvshowsdefault" enable="false" default="None"/>
 		<setting label="Total setup Done" id="total_setup_done" type="bool" default="false" visible="false"/>
 		<setting id="flatten.tvshows" type="enum" label="Flatten TV Show Seasons" values="Never|If only one Season|Always" default="1" />
+		<setting id="enablefanart" type="bool" label="Enable Fanart" default="true" />
 		<setting label="Library" type="lsep"/>
 		<setting label="Enable library updates?" id="library_updates" type="bool" default="true"/>
 		<setting label="Force library update..." type="action" subsetting="true" action="RunPlugin(plugin://plugin.video.openmeta/update_library_from_settings)" visible="eq(-1,true)"/>
@@ -38,5 +39,7 @@
         <setting label="API key" id="tmdb_api" type="text" default=""/>
 		<setting label="TVDB (v1), Keys for the v2 of TVDB's API will not work" type="lsep"/>
         <setting label="API key" id="tvdb_api" type="text" default=""/>
+		<setting label="FANART.TV" type="lsep"/>
+        <setting label="API key" id="fanart.apikey" type="text" default=""/>
 	</category>
 </settings>

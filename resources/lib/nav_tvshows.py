@@ -12,6 +12,7 @@ from resources.lib.TheTVDB import TVDB
 from resources.lib.xswift2 import plugin
 
 
+enablefanart = plugin.get_setting('enablefanart', bool)
 SORT = [
 	xbmcplugin.SORT_METHOD_UNSORTED,
 	xbmcplugin.SORT_METHOD_LABEL,
@@ -508,7 +509,7 @@ def make_tvshow_item(info):
 	else:
 		context_menu = [
 			('Add to library', 'RunPlugin(%s)' % plugin.url_for('tv_add_to_library', id=tvdb_id))]
-	return {
+	showitem = {
 		'label': text.to_utf8(info['title']),
 		'path': plugin.url_for('tv_tvshow', id=tvdb_id),
 		'context_menu': context_menu,
@@ -519,6 +520,25 @@ def make_tvshow_item(info):
 		'stream_info': {'video': {}},
 		'info': info
 		}
+	if enablefanart:
+		try:
+			art = get_fanarttv_art(tvdb_id)
+			showitem.update({
+							'thumbnail': art['poster'],
+							'poster': art['poster'],
+	                		'fanart': art['fanart'],
+	                		'banner': art['banner'],
+	                		'clearart': art['clearart'],
+	                		'clearlogo': art['clearlogo'],
+	                		'landscape': art['landscape']
+	                		})
+		except:
+			pass
+	return showitem
+
+def get_fanarttv_art(id):
+	from resources.lib import fanarttv
+	return fanarttv.get(id, 'tv')
 
 @plugin.cached(TTL=60)
 def list_seasons_tvdb(id, flatten):

@@ -12,6 +12,7 @@ from resources.lib.rpc import RPC
 from resources.lib.xswift2 import plugin
 
 
+enablefanart = plugin.get_setting('enablefanart', bool)
 SORT = [
 	xbmcplugin.SORT_METHOD_UNSORTED,
 	xbmcplugin.SORT_METHOD_LABEL,
@@ -513,7 +514,7 @@ def make_movie_item(movie_info):
 	else:
 		context_menu = [
 			('Add to library','RunPlugin(%s)' % plugin.url_for('movies_add_to_library', src=src, id=id))]
-	return {
+	movieitem = {
 		'label': movie_info['title'],
 		'path': plugin.url_for('movies_play', src=src, id=id, usedefault=True),
 		'context_menu': context_menu,
@@ -526,6 +527,24 @@ def make_movie_item(movie_info):
 		'stream_info': {'video': {}},
 		'info': movie_info
 		}
+	if enablefanart:
+		try:
+			art = get_fanarttv_art(id)
+			movieitem.update({
+							'thumbnail': art['poster'],
+							'poster': art['poster'],
+	                		'fanart': art['fanart'],
+	                		'banner': art['banner'],
+	                		'clearlogo': art['clearlogo'],
+	                		'landscape': art['landscape']
+	                		})
+		except:
+			pass
+	return movieitem
+
+def get_fanarttv_art(id):
+	from resources.lib import fanarttv
+	return fanarttv.get(id, 'movies')
 
 @plugin.route('/my_trakt/movie_lists/movies/recommendations')
 def trakt_movies_recommendations(raw=False):
