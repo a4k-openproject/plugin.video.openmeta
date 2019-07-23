@@ -527,7 +527,7 @@ def list_seasons_tvdb(id, flatten):
 	show_info = meta_info.get_tvshow_metadata_tvdb(show, banners=False)
 	items = []
 	for (season_num, season) in show.items():
-		if season_num == 0 and not False:
+		if season_num == 0 and not plugin.get_setting('include_specials', bool):
 			continue
 		elif not season.has_aired(flexible=False):
 			continue
