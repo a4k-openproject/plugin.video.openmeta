@@ -9,6 +9,7 @@
         <setting label="Default Movie Player" type="text" subsetting="true" id="moviesdefault" enable="false" default="None"/>
         <setting label="Default TV Show Player" type="text" subsetting="true" id="tvshowsdefault" enable="false" default="None"/>
 		<setting label="Total setup Done" id="total_setup_done" type="bool" default="false" visible="false"/>
+		<setting label="Include TV Show Specials" id="include_specials" type="bool" default="false"/>
 		<setting id="flatten.tvshows" type="enum" label="Flatten TV Show Seasons" values="Never|If only one Season|Always" default="1" />
 		<setting label="Library" type="lsep"/>
 		<setting label="Enable library updates?" id="library_updates" type="bool" default="true"/>
