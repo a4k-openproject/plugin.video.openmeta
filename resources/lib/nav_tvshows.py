@@ -9,6 +9,7 @@ from resources.lib import meta_info
 from resources.lib import lib_tvshows
 from resources.lib import play_tvshows
 from resources.lib.TheTVDB import TVDB
+from resources.lib import fanarttv
 from resources.lib.xswift2 import plugin
 
 
@@ -370,6 +371,7 @@ def list_tvshows(response):
 	return items
 
 def list_trakt_episodes(result):
+	from resources.lib.TheTVDB import TVDB
 	genres_dict = dict([(x['slug'], x['name']) for x in Trakt.get_genres('shows')])
 	items = []
 	for item in result:
@@ -411,8 +413,17 @@ def list_trakt_episodes(result):
 		episode_info = meta_info.get_episode_metadata_trakt(info, episode)
 		episode_info['title'] = '%s (%02dx%02d): %s' % (tvshow_title, season_num, episode_num, episode_title)
 		context_menu = []
-		items.append(
-			{
+		showdata = TVDB[int(id)]
+		extradata = play_tvshows.get_episode_parameters(showdata, season_num, episode_num)
+		try:
+			playdata = get_play_count(info['trakt_id'])
+			properties = {'TotalSeasons': len(playdata['seasons']),
+							'TotalEpisodes': playdata['aired'],
+							'WatchedEpisodes': playdata['completed'],
+							'UnWatchedEpisodes': playdata['aired'] - playdata['completed']}
+		except:
+			properties = {}
+		episodeitem	= {
 				'label': episode_info['title'],
 				'path': plugin.url_for('tv_play', id=id, season=season_num, episode=episode_num, usedefault=True),
 				'context_menu': context_menu,
@@ -420,10 +431,20 @@ def list_trakt_episodes(result):
 				'is_playable': True,
 				'info_type': 'video',
 				'stream_info': {'video': {}},
-				'thumbnail': episode_info['poster'],
-				'poster': episode_info['poster'],
+				'thumbnail': extradata['thumbnail'],
+				'poster': extradata['thumbnail'],
+				'properties': properties,
 				'fanart': episode_info['fanart']
-			})
+			}
+
+		if enablefanart:
+			try:
+				art = get_fanarttv_art(tvdb_id)
+				art.update({'poster': extradata['thumbnail']})
+				episodeitem.update(art)
+			except:
+				pass
+		items.append(episodeitem)
 	return plugin.finish(items=items, sort_methods=SORTRAKT, cache_to_disc=False)
 
 def build_tvshow_info(tvdb_show, tmdb_show=None):
@@ -509,6 +530,18 @@ def make_tvshow_item(info):
 	else:
 		context_menu = [
 			('Add to library', 'RunPlugin(%s)' % plugin.url_for('tv_add_to_library', id=tvdb_id))]
+	try:
+		if 'trakt_id' in info.keys():
+			extradata = get_play_count(info['trakt_id'])
+		else:
+			id = Trakt.find_trakt_ids('tvdb', tvdb_id, 'show')
+			extradata = get_play_count(id['trakt'])			
+		properties = {'TotalSeasons': len(extradata['seasons']),
+						'TotalEpisodes': extradata['aired'],
+						'WatchedEpisodes': extradata['completed'],
+						'UnWatchedEpisodes': extradata['aired'] - extradata['completed']}
+	except:
+		properties = {}
 	showitem = {
 		'label': text.to_utf8(info['title']),
 		'path': plugin.url_for('tv_tvshow', id=tvdb_id),
@@ -518,27 +551,19 @@ def make_tvshow_item(info):
 		'fanart': info['fanart'],
 		'info_type': 'video',
 		'stream_info': {'video': {}},
+		'properties': properties,
 		'info': info
 		}
 	if enablefanart:
 		try:
 			art = get_fanarttv_art(tvdb_id)
-			showitem.update({
-							'thumbnail': art['poster'],
-							'poster': art['poster'],
-	                		'fanart': art['fanart'],
-	                		'banner': art['banner'],
-	                		'clearart': art['clearart'],
-	                		'clearlogo': art['clearlogo'],
-	                		'landscape': art['landscape']
-	                		})
+			showitem.update(art)
 		except:
 			pass
 	return showitem
 
-def get_fanarttv_art(id):
-	from resources.lib import fanarttv
-	return fanarttv.get(id, 'tv')
+def get_play_count(id):
+	return Trakt.get_show_play_count(id)
 
 @plugin.cached(TTL=60)
 def list_seasons_tvdb(id, flatten):
@@ -574,6 +599,9 @@ def list_seasons_tvdb(id, flatten):
 		items = list_episodes_tvdb(id, '1')
 	return items
 
+def get_fanarttv_art(id):
+	return fanarttv.get(id, 'tv')
+
 @plugin.cached(TTL=60)
 def list_episodes_tvdb(id, season_num):
 	id = int(id)
@@ -588,8 +616,15 @@ def list_episodes_tvdb(id, season_num):
 			break
 		episode_info = meta_info.get_episode_metadata_tvdb(season_info, episode)
 		context_menu = []
-		items.append(
-			{
+		try:
+			extradata = get_play_count(info['trakt_id'])
+			properties = {'TotalSeasons': len(extradata['seasons']),
+							'TotalEpisodes': extradata['aired'],
+							'WatchedEpisodes': extradata['completed'],
+							'UnWatchedEpisodes': extradata['aired'] - extradata['completed']}
+		except:
+			properties = {}
+		episodeitem = {
 				'label': episode_info['title'],
 				'path': plugin.url_for('tv_play', id=id, season=season_num, episode=episode_num, usedefault=True),
 				'context_menu': context_menu,
@@ -599,8 +634,17 @@ def list_episodes_tvdb(id, season_num):
 				'stream_info': {'video': {}},
 				'thumbnail': episode_info['poster'],
 				'poster': season_info['poster'],
+				'properties': properties,
 				'fanart': episode_info['fanart']
-			})
+			}
+
+		if enablefanart:
+			try:
+				art = get_fanarttv_art(tvdb_id)
+				episodeitem.update(art)
+			except:
+				pass
+		items.append(episodeitem)
 	return items
 
 def tmdb_to_tvdb(tmdb_show):
@@ -768,6 +812,14 @@ def _lists_trakt_show_tv_list(list_items):
 			show_info = meta_info.get_tvshow_metadata_trakt(show, genres_dict)
 			episode_info = meta_info.get_episode_metadata_trakt(show_info, episode)
 			label = '%s - S%sE%s - %s' % (show_info['title'], season_number, episode_number, episode_info['title'])
+			try:
+				extradata = get_play_count(show_info['trakt_id'])
+				properties = {'TotalSeasons': len(extradata['seasons']),
+								'TotalEpisodes': extradata['aired'],
+								'WatchedEpisodes': extradata['completed'],
+								'UnWatchedEpisodes': extradata['aired'] - extradata['completed']}
+			except:
+				properties = {}
 			item = (
 				{
 					'label': label,
@@ -778,8 +830,16 @@ def _lists_trakt_show_tv_list(list_items):
 					'stream_info': {'video': {}},
 					'thumbnail': episode_info['poster'],
 					'poster': episode_info['poster'],
+					'properties': properties,
 					'fanart': episode_info['fanart']
 				})
+
+			if enablefanart:
+				try:
+					art = get_fanarttv_art(tvdb_id)
+					item.update(art)
+				except:
+					pass
 		if item is not None:
 			items.append(item)
 	return items

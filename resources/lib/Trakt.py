@@ -191,6 +191,10 @@ def get_genres(type):
 def get_show(id):
 	return call_trakt('shows/%s' % id)
 
+@plugin.cached(TTL=60, cache='Trakt')
+def get_show_play_count(id):
+	return call_trakt('shows/%s/progress/watched' % id)
+
 def get_latest_episode(id):
 	return call_trakt('shows/%s/last_episode' % id)
 

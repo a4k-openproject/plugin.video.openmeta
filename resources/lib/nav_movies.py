@@ -9,6 +9,7 @@ from resources.lib import lib_movies
 from resources.lib import playrandom
 from resources.lib import play_movies
 from resources.lib.rpc import RPC
+from resources.lib import fanarttv
 from resources.lib.xswift2 import plugin
 
 
@@ -530,20 +531,12 @@ def make_movie_item(movie_info):
 	if enablefanart:
 		try:
 			art = get_fanarttv_art(id)
-			movieitem.update({
-							'thumbnail': art['poster'],
-							'poster': art['poster'],
-	                		'fanart': art['fanart'],
-	                		'banner': art['banner'],
-	                		'clearlogo': art['clearlogo'],
-	                		'landscape': art['landscape']
-	                		})
+			movieitem.update(art)
 		except:
 			pass
 	return movieitem
 
 def get_fanarttv_art(id):
-	from resources.lib import fanarttv
 	return fanarttv.get(id, 'movies')
 
 @plugin.route('/my_trakt/movie_lists/movies/recommendations')
