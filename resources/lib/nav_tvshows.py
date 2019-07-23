@@ -439,7 +439,8 @@ def list_trakt_episodes(result):
 
 		if enablefanart:
 			try:
-				art = get_fanarttv_art(tvdb_id)
+				art = get_fanarttv_art(info['tvdb_id'])
+				art = checkart(art)
 				episodeitem.update(art)
 			except:
 				pass
@@ -556,6 +557,7 @@ def make_tvshow_item(info):
 	if enablefanart:
 		try:
 			art = get_fanarttv_art(tvdb_id)
+			art = checkart(art)
 			showitem.update(art)
 		except:
 			pass
@@ -582,8 +584,7 @@ def list_seasons_tvdb(id, flatten):
 					('OpenInfo', 'RunScript(script.extendedinfo,info=seasoninfo,tvshow=%s,season=%s)' % (show_info['name'], season_num))]
 			else:
 				context_menu = []
-			items.append(
-				{
+			seasonitem = {
 					'label': 'Season %s' % season_num,
 					'path': plugin.url_for('tv_season', id=id, season_num=season_num),
 					'context_menu': context_menu,
@@ -591,12 +592,27 @@ def list_seasons_tvdb(id, flatten):
 					'thumbnail': season_info['poster'],
 					'poster': season_info['poster'],
 					'fanart': season_info['fanart']
-				})
+				}
+			if enablefanart:
+				try:
+					art = get_fanarttv_art(show_info['tvdb_id'])
+					art = checkart(art)
+					seasonitem.update(art)
+				except:
+					pass
+			items.append(seasonitem)
 		elif flatten == 'all':
 			items += list_episodes_tvdb(id, season_num)
 	if flatten == 'one':
 		items = list_episodes_tvdb(id, '1')
 	return items
+
+def checkart(item):
+	art = {}
+	for key, val in item.items():
+		if val != '':
+			art.update({key: val})
+	return art
 
 def get_fanarttv_art(id):
 	return fanarttv.get(id, 'tv')
@@ -639,7 +655,8 @@ def list_episodes_tvdb(id, season_num):
 
 		if enablefanart:
 			try:
-				art = get_fanarttv_art(tvdb_id)
+				art = get_fanarttv_art(show_info['tvdb_id'])
+				art = checkart(art)
 				episodeitem.update(art)
 			except:
 				pass
@@ -836,6 +853,7 @@ def _lists_trakt_show_tv_list(list_items):
 			if enablefanart:
 				try:
 					art = get_fanarttv_art(tvdb_id)
+					art = checkart(art)
 					item.update(art)
 				except:
 					pass

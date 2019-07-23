@@ -38,5 +38,7 @@
         <setting label="API key" id="tmdb_api" type="text" default=""/>
 		<setting label="TVDB (v1), Keys for the v2 of TVDB's API will not work" type="lsep"/>
         <setting label="API key" id="tvdb_api" type="text" default=""/>
+		<setting label="FANART.TV" type="lsep"/>
+        <setting label="API key" id="fanart.apikey" type="text" default=""/>
 	</category>
 </settings>
