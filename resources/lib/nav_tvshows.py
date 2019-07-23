@@ -432,7 +432,7 @@ def list_trakt_episodes(result):
 				'info_type': 'video',
 				'stream_info': {'video': {}},
 				'thumbnail': extradata['thumbnail'],
-				'poster': extradata['thumbnail'],
+				'poster': extradata['poster'],
 				'properties': properties,
 				'fanart': episode_info['fanart']
 			}
@@ -440,7 +440,6 @@ def list_trakt_episodes(result):
 		if enablefanart:
 			try:
 				art = get_fanarttv_art(tvdb_id)
-				art.update({'poster': extradata['thumbnail']})
 				episodeitem.update(art)
 			except:
 				pass
