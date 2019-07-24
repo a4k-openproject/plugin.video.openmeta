@@ -53,7 +53,7 @@ def list_trakt_tvshows(results, pages, page):
 			})
 	return plugin.finish(items=items, sort_methods=SORT)
 
-@plugin.route('/tv/trakt_watched/<page>')
+@plugin.route('/tv/trakt_watched/<page>/')
 def trakt_tv_watched(page, raw=False):
 	results, pages = Trakt.get_watched_shows_paginated(page)
 	if raw:
@@ -61,7 +61,7 @@ def trakt_tv_watched(page, raw=False):
 	else:
 		return list_trakt_tvshows(results, pages, page)
 
-@plugin.route('/tv/trakt_netflix_collected/<page>')
+@plugin.route('/tv/trakt_netflix_collected/<page>/')
 def trakt_netflix_tv_collected(page, raw=False):
 	results, pages = Trakt.get_netflix_collected_shows(page)
 	if raw:
@@ -69,7 +69,7 @@ def trakt_netflix_tv_collected(page, raw=False):
 	else:
 		return list_trakt_tvshows(results, pages, page)
 
-@plugin.route('/tv/trakt_collected/<page>')
+@plugin.route('/tv/trakt_collected/<page>/')
 def trakt_tv_collected(page, raw=False):
 	results, pages = Trakt.get_collected_shows_paginated(page)
 	if raw:
@@ -77,7 +77,7 @@ def trakt_tv_collected(page, raw=False):
 	else:
 		return list_trakt_tvshows(results, pages, page)
 
-@plugin.route('/tv/trakt_popular/<page>')
+@plugin.route('/tv/trakt_popular/<page>/')
 def tv_trakt_popular(page, raw=False):
 	results, pages = Trakt.get_popular_shows_paginated(page)
 	if raw:
@@ -98,7 +98,7 @@ def tv_trakt_popular(page, raw=False):
 				})
 		return plugin.finish(items=items, sort_methods=SORT)
 
-@plugin.route('/tv/trakt_trending/<page>')
+@plugin.route('/tv/trakt_trending/<page>/')
 def trakt_tv_trending(page, raw=False):
 	results, pages = Trakt.get_trending_shows_paginated(page)
 	if raw:
@@ -106,7 +106,7 @@ def trakt_tv_trending(page, raw=False):
 	else:
 		list_trakt_tvshows(results, pages, page)
 
-@plugin.route('/tv/tvdb_search_term/<term>/<page>')
+@plugin.route('/tv/tvdb_search_term/<term>/<page>/')
 def tvdb_tv_search_term(term, page):
 	search_results = TVDB.search(term, language='en')
 	items = []
@@ -134,7 +134,7 @@ def list_trakt_search_items(results, pages, page):
 			})
 	return items
 
-@plugin.route('/tv/trakt_search_term/<term>/<page>')
+@plugin.route('/tv/trakt_search_term/<term>/<page>/')
 def trakt_tv_search_term(term, page):
 	results, pages = Trakt.search_for_tvshow_paginated(term, page)
 	return list_trakt_search_items(results, pages, page)
@@ -151,7 +151,7 @@ def tmdb_tv_genres():
 		} for id, name in genres.items()], key=lambda k: k['label'])
 	return items
 
-@plugin.cached_route('/tv/genre/<id>/<page>', TTL=60)
+@plugin.cached_route('/tv/genre/<id>/<page>/', TTL=60)
 def tmdb_tv_genre(id, page, raw=False):
 	from resources.lib.TheMovieDB import Discover
 	result = Discover().tv(with_genres=id, page=page, language='en')
@@ -160,7 +160,7 @@ def tmdb_tv_genre(id, page, raw=False):
 	else:
 		return list_tvshows(result)
 
-@plugin.cached_route('/tv/tmdb_now_playing/<page>', TTL=60)
+@plugin.cached_route('/tv/tmdb_now_playing/<page>/', TTL=60)
 def tmdb_tv_on_the_air(page, raw=False):
 	from resources.lib.TheMovieDB import TV
 	result = TV().on_the_air(page=page, language='en')
@@ -169,7 +169,7 @@ def tmdb_tv_on_the_air(page, raw=False):
 	else:
 		return list_tvshows(result)
 
-@plugin.cached_route('/tv/tmdb_most_popular/<page>', TTL=60)
+@plugin.cached_route('/tv/tmdb_most_popular/<page>/', TTL=60)
 def tmdb_tv_most_popular(page, raw=False):
 	from resources.lib.TheMovieDB import TV
 	result = TV().popular(page=page, language='en')
@@ -707,7 +707,7 @@ def lists_trakt_my_tv_lists():
 			})
 	return plugin.finish(items=items, sort_methods=SORT)
 
-@plugin.route('/my_trakt/tv_lists/trakt_liked_tv_list/<page>')
+@plugin.route('/my_trakt/tv_lists/trakt_liked_tv_list/<page>/')
 def lists_trakt_liked_tv_lists(page):
 	lists, pages = Trakt.get_liked_lists(page)
 	items = []
