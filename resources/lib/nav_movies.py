@@ -30,7 +30,7 @@ SORTRAKT = [
 	xbmcplugin.SORT_METHOD_PLAYCOUNT,
 	xbmcplugin.SORT_METHOD_DURATION]
 
-@plugin.route('/movies/tmdb/blockbusters/<page>')
+@plugin.route('/movies/tmdb/blockbusters/<page>/')
 def tmdb_movies_blockbusters(page, raw=False):
 	from resources.lib.TheMovieDB import Discover
 	result = Discover().movie(language='en', append_to_response='external_ids,videos', **{'page': page, 'sort_by': 'revenue.desc'})
@@ -47,7 +47,7 @@ def tmdb_movies_play_random_blockbuster():
 		result.update(tmdb_movies_blockbusters(i, raw=True))
 	tmdb_movies_play_random(result)
 
-@plugin.route('/movies/tmdb/now_playing/<page>')
+@plugin.route('/movies/tmdb/now_playing/<page>/')
 def tmdb_movies_now_playing(page, raw=False):
 	from resources.lib.TheMovieDB import Movies
 	result = Movies().now_playing(language='en', page=page, append_to_response='external_ids,videos')
@@ -65,7 +65,7 @@ def tmdb_movies_play_random_now_playing():
 	tmdb_movies_play_random(result)
 
 
-@plugin.route('/movies/tmdb/popular/<page>')
+@plugin.route('/movies/tmdb/popular/<page>/')
 def tmdb_movies_popular(page, raw=False):
 	from resources.lib.TheMovieDB import Movies
 	result = Movies().popular(language='en', page=page)
@@ -83,7 +83,7 @@ def tmdb_movies_play_random_popular():
 	tmdb_movies_play_random(result)
 
 
-@plugin.route('/movies/tmdb/top_rated/<page>')
+@plugin.route('/movies/tmdb/top_rated/<page>/')
 def tmdb_movies_top_rated(page, raw=False):
 	from resources.lib.TheMovieDB import Movies
 	result = Movies().top_rated(language='en', page=page, append_to_response='external_ids,videos')
@@ -100,7 +100,7 @@ def tmdb_movies_play_random_top_rated():
 		result.update(tmdb_movies_top_rated(i, raw=True))
 	tmdb_movies_play_random(result)
 
-@plugin.route('/movies/trakt/search/<term>/<page>')
+@plugin.route('/movies/trakt/search/<term>/<page>/')
 def trakt_movies_search_term(term, page):
 	results, pages = Trakt.search_for_movie_paginated(term, page)
 	return list_trakt_search_items(results, pages, page)
@@ -118,7 +118,7 @@ def trakt_movies_play_random_latest_releases():
 	results = trakt_movies_latest_releases(raw=True)
 	trakt_movies_play_random(results)
 
-@plugin.route('/movies/trakt/imdb_top_rated_movies/<page>')
+@plugin.route('/movies/trakt/imdb_top_rated_movies/<page>/')
 def trakt_movies_imdb_top_rated(page, raw=False):
 	results, pages = Trakt.get_imdb_top_rated_movies(page)
 	if raw:
@@ -134,7 +134,7 @@ def trakt_movies_play_random_imdb_top_rated():
 		result.extend(trakt_movies_imdb_top_rated(i, raw=True))
 	trakt_movies_play_random(result)
 
-@plugin.route('/movies/trakt/watched/<page>')
+@plugin.route('/movies/trakt/watched/<page>/')
 def trakt_movies_watched(page, raw=False):
 	results, pages = Trakt.get_watched_movies_paginated(page)
 	if raw:
@@ -150,7 +150,7 @@ def trakt_movies_play_random_watched():
 		result.extend(trakt_movies_watched(i, raw=True))
 	trakt_movies_play_random(result)
 
-@plugin.route('/movies/trakt/collected/<page>')
+@plugin.route('/movies/trakt/collected/<page>/')
 def trakt_movies_collected(page, raw=False):
 	results, pages = Trakt.get_collected_movies_paginated(page)
 	if raw:
@@ -166,7 +166,7 @@ def trakt_movies_play_random_collected():
 		result.extend(trakt_movies_collected(i, raw=True))
 	trakt_movies_play_random(result)
 
-@plugin.route('/movies/trakt/popular/<page>')
+@plugin.route('/movies/trakt/popular/<page>/')
 def trakt_movies_popular(page, raw=False):
 	results, pages = Trakt.get_popular_movies_paginated(page)
 	if raw:
@@ -183,7 +183,7 @@ def trakt_movies_play_random_popular():
 	trakt_movies_play_random(result)
 
 
-@plugin.route('/movies/trakt/trending/<page>')
+@plugin.route('/movies/trakt/trending/<page>/')
 def trakt_movies_trending(page, raw=False):
 	results, pages = Trakt.get_trending_movies_paginated(page)
 	if raw:
@@ -200,7 +200,7 @@ def trakt_movies_play_random_trending():
 	trakt_movies_play_random(result)
 
 
-@plugin.route('/movies/tmdb/search_term/<term>/<page>')
+@plugin.route('/movies/tmdb/search_term/<term>/<page>/')
 def tmdb_movies_search_term(term, page):
 	from resources.lib.TheMovieDB import Search
 	result = Search().movie(query=term, language='en', page=page, append_to_response='external_ids,videos')
@@ -228,7 +228,7 @@ def tmdb_movies_genres():
 		} for id, name in genres.items()], key=lambda k: k['label'])
 	return plugin.finish(items=items, sort_methods=SORT)
 
-@plugin.route('/movies/genre/<id>/<page>')
+@plugin.route('/movies/genre/<id>/<page>/')
 def tmdb_movies_genre(id, page, raw=False):
 	from resources.lib.TheMovieDB import Genres
 	result = Genres(id).movies(id=id, language='en', page=page)
@@ -576,7 +576,7 @@ def lists_trakt_my_movie_lists():
 			})
 	return plugin.finish(items=items, sort_methods=SORT)
 
-@plugin.route('/my_trakt/movie_list/trakt_liked_movie_list/<page>')
+@plugin.route('/my_trakt/movie_list/trakt_liked_movie_list/<page>/')
 def lists_trakt_liked_movie_lists(page):
 	lists, pages = Trakt.get_liked_lists(page)
 	items = []
