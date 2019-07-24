@@ -5,7 +5,7 @@ import requests, xbmc
 
 client_key = plugin.get_setting('fanart.apikey', str)
 base_url = "http://webservice.fanart.tv/v3/%s/%s"
-api_key = "de2514186c9e2778800f9fdb6b32c47a"
+api_key = "ac3aa6a86ba7518c9e0e198af71a3017"
 language = xbmc.getLanguage(xbmc.ISO_639_1)
 
 def get_query_lang(art, lang):
