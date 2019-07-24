@@ -9,9 +9,11 @@ from resources.lib import meta_info
 from resources.lib import lib_tvshows
 from resources.lib import play_tvshows
 from resources.lib.TheTVDB import TVDB
+from resources.lib import fanarttv
 from resources.lib.xswift2 import plugin
 
 
+enablefanart = plugin.get_setting('enablefanart', bool)
 SORT = [
 	xbmcplugin.SORT_METHOD_UNSORTED,
 	xbmcplugin.SORT_METHOD_LABEL,
@@ -369,6 +371,7 @@ def list_tvshows(response):
 	return items
 
 def list_trakt_episodes(result):
+	from resources.lib.TheTVDB import TVDB
 	genres_dict = dict([(x['slug'], x['name']) for x in Trakt.get_genres('shows')])
 	items = []
 	for item in result:
@@ -410,8 +413,9 @@ def list_trakt_episodes(result):
 		episode_info = meta_info.get_episode_metadata_trakt(info, episode)
 		episode_info['title'] = '%s (%02dx%02d): %s' % (tvshow_title, season_num, episode_num, episode_title)
 		context_menu = []
-		items.append(
-			{
+		showdata = TVDB[int(id)]
+		extradata = play_tvshows.get_episode_parameters(showdata, season_num, episode_num)
+		episodeitem	= {
 				'label': episode_info['title'],
 				'path': plugin.url_for('tv_play', id=id, season=season_num, episode=episode_num, usedefault=True),
 				'context_menu': context_menu,
@@ -419,10 +423,19 @@ def list_trakt_episodes(result):
 				'is_playable': True,
 				'info_type': 'video',
 				'stream_info': {'video': {}},
-				'thumbnail': episode_info['poster'],
-				'poster': episode_info['poster'],
+				'thumbnail': extradata['thumbnail'],
+				'poster': extradata['poster'],
 				'fanart': episode_info['fanart']
-			})
+			}
+
+		if enablefanart:
+			try:
+				art = get_fanarttv_art(info['tvdb_id'])
+				art = checkart(art)
+				episodeitem.update(art)
+			except:
+				pass
+		items.append(episodeitem)
 	return plugin.finish(items=items, sort_methods=SORTRAKT, cache_to_disc=False)
 
 def build_tvshow_info(tvdb_show, tmdb_show=None):
@@ -508,7 +521,7 @@ def make_tvshow_item(info):
 	else:
 		context_menu = [
 			('Add to library', 'RunPlugin(%s)' % plugin.url_for('tv_add_to_library', id=tvdb_id))]
-	return {
+	showitem = {
 		'label': text.to_utf8(info['title']),
 		'path': plugin.url_for('tv_tvshow', id=tvdb_id),
 		'context_menu': context_menu,
@@ -519,6 +532,14 @@ def make_tvshow_item(info):
 		'stream_info': {'video': {}},
 		'info': info
 		}
+	if enablefanart:
+		try:
+			art = get_fanarttv_art(tvdb_id)
+			art = checkart(art)
+			showitem.update(art)
+		except:
+			pass
+	return showitem
 
 @plugin.cached(TTL=60)
 def list_seasons_tvdb(id, flatten):
@@ -538,8 +559,7 @@ def list_seasons_tvdb(id, flatten):
 					('OpenInfo', 'RunScript(script.extendedinfo,info=seasoninfo,tvshow=%s,season=%s)' % (show_info['name'], season_num))]
 			else:
 				context_menu = []
-			items.append(
-				{
+			seasonitem = {
 					'label': 'Season %s' % season_num,
 					'path': plugin.url_for('tv_season', id=id, season_num=season_num),
 					'context_menu': context_menu,
@@ -547,12 +567,30 @@ def list_seasons_tvdb(id, flatten):
 					'thumbnail': season_info['poster'],
 					'poster': season_info['poster'],
 					'fanart': season_info['fanart']
-				})
+				}
+			if enablefanart:
+				try:
+					art = get_fanarttv_art(show_info['tvdb_id'])
+					art = checkart(art)
+					seasonitem.update(art)
+				except:
+					pass
+			items.append(seasonitem)
 		elif flatten == 'all':
 			items += list_episodes_tvdb(id, season_num)
 	if flatten == 'one':
 		items = list_episodes_tvdb(id, '1')
 	return items
+
+def checkart(item):
+	art = {}
+	for key, val in item.items():
+		if val != '':
+			art.update({key: val})
+	return art
+
+def get_fanarttv_art(id):
+	return fanarttv.get(id, 'tv')
 
 @plugin.cached(TTL=60)
 def list_episodes_tvdb(id, season_num):
@@ -568,8 +606,7 @@ def list_episodes_tvdb(id, season_num):
 			break
 		episode_info = meta_info.get_episode_metadata_tvdb(season_info, episode)
 		context_menu = []
-		items.append(
-			{
+		episodeitem = {
 				'label': episode_info['title'],
 				'path': plugin.url_for('tv_play', id=id, season=season_num, episode=episode_num, usedefault=True),
 				'context_menu': context_menu,
@@ -580,7 +617,16 @@ def list_episodes_tvdb(id, season_num):
 				'thumbnail': episode_info['poster'],
 				'poster': season_info['poster'],
 				'fanart': episode_info['fanart']
-			})
+			}
+
+		if enablefanart:
+			try:
+				art = get_fanarttv_art(show_info['tvdb_id'])
+				art = checkart(art)
+				episodeitem.update(art)
+			except:
+				pass
+		items.append(episodeitem)
 	return items
 
 def tmdb_to_tvdb(tmdb_show):
@@ -760,6 +806,14 @@ def _lists_trakt_show_tv_list(list_items):
 					'poster': episode_info['poster'],
 					'fanart': episode_info['fanart']
 				})
+
+			if enablefanart:
+				try:
+					art = get_fanarttv_art(tvdb_id)
+					art = checkart(art)
+					item.update(art)
+				except:
+					pass
 		if item is not None:
 			items.append(item)
 	return items
