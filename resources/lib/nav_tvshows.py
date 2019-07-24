@@ -415,14 +415,6 @@ def list_trakt_episodes(result):
 		context_menu = []
 		showdata = TVDB[int(id)]
 		extradata = play_tvshows.get_episode_parameters(showdata, season_num, episode_num)
-		try:
-			playdata = get_play_count(info['trakt_id'])
-			properties = {'TotalSeasons': len(playdata['seasons']),
-							'TotalEpisodes': playdata['aired'],
-							'WatchedEpisodes': playdata['completed'],
-							'UnWatchedEpisodes': playdata['aired'] - playdata['completed']}
-		except:
-			properties = {}
 		episodeitem	= {
 				'label': episode_info['title'],
 				'path': plugin.url_for('tv_play', id=id, season=season_num, episode=episode_num, usedefault=True),
@@ -433,7 +425,6 @@ def list_trakt_episodes(result):
 				'stream_info': {'video': {}},
 				'thumbnail': extradata['thumbnail'],
 				'poster': extradata['poster'],
-				'properties': properties,
 				'fanart': episode_info['fanart']
 			}
 
@@ -530,18 +521,6 @@ def make_tvshow_item(info):
 	else:
 		context_menu = [
 			('Add to library', 'RunPlugin(%s)' % plugin.url_for('tv_add_to_library', id=tvdb_id))]
-	try:
-		if 'trakt_id' in info.keys():
-			extradata = get_play_count(info['trakt_id'])
-		else:
-			id = Trakt.find_trakt_ids('tvdb', tvdb_id, 'show')
-			extradata = get_play_count(id['trakt'])			
-		properties = {'TotalSeasons': len(extradata['seasons']),
-						'TotalEpisodes': extradata['aired'],
-						'WatchedEpisodes': extradata['completed'],
-						'UnWatchedEpisodes': extradata['aired'] - extradata['completed']}
-	except:
-		properties = {}
 	showitem = {
 		'label': text.to_utf8(info['title']),
 		'path': plugin.url_for('tv_tvshow', id=tvdb_id),
@@ -551,7 +530,6 @@ def make_tvshow_item(info):
 		'fanart': info['fanart'],
 		'info_type': 'video',
 		'stream_info': {'video': {}},
-		'properties': properties,
 		'info': info
 		}
 	if enablefanart:
@@ -562,9 +540,6 @@ def make_tvshow_item(info):
 		except:
 			pass
 	return showitem
-
-def get_play_count(id):
-	return Trakt.get_show_play_count(id)
 
 @plugin.cached(TTL=60)
 def list_seasons_tvdb(id, flatten):
@@ -631,14 +606,6 @@ def list_episodes_tvdb(id, season_num):
 			break
 		episode_info = meta_info.get_episode_metadata_tvdb(season_info, episode)
 		context_menu = []
-		try:
-			extradata = get_play_count(info['trakt_id'])
-			properties = {'TotalSeasons': len(extradata['seasons']),
-							'TotalEpisodes': extradata['aired'],
-							'WatchedEpisodes': extradata['completed'],
-							'UnWatchedEpisodes': extradata['aired'] - extradata['completed']}
-		except:
-			properties = {}
 		episodeitem = {
 				'label': episode_info['title'],
 				'path': plugin.url_for('tv_play', id=id, season=season_num, episode=episode_num, usedefault=True),
@@ -649,7 +616,6 @@ def list_episodes_tvdb(id, season_num):
 				'stream_info': {'video': {}},
 				'thumbnail': episode_info['poster'],
 				'poster': season_info['poster'],
-				'properties': properties,
 				'fanart': episode_info['fanart']
 			}
 
@@ -828,14 +794,6 @@ def _lists_trakt_show_tv_list(list_items):
 			show_info = meta_info.get_tvshow_metadata_trakt(show, genres_dict)
 			episode_info = meta_info.get_episode_metadata_trakt(show_info, episode)
 			label = '%s - S%sE%s - %s' % (show_info['title'], season_number, episode_number, episode_info['title'])
-			try:
-				extradata = get_play_count(show_info['trakt_id'])
-				properties = {'TotalSeasons': len(extradata['seasons']),
-								'TotalEpisodes': extradata['aired'],
-								'WatchedEpisodes': extradata['completed'],
-								'UnWatchedEpisodes': extradata['aired'] - extradata['completed']}
-			except:
-				properties = {}
 			item = (
 				{
 					'label': label,
@@ -846,7 +804,6 @@ def _lists_trakt_show_tv_list(list_items):
 					'stream_info': {'video': {}},
 					'thumbnail': episode_info['poster'],
 					'poster': episode_info['poster'],
-					'properties': properties,
 					'fanart': episode_info['fanart']
 				})
 
