@@ -630,7 +630,7 @@ def list_seasons_tvdb(id, flatten):
 				}
 			if enablefanart:
 				try:
-					art = get_fanarttv_art(show_info['tvdb_id'], query='seaason')
+					art = get_fanarttv_art(show_info['tvdb_id'], query='season')
 					art = checkart(art)
 					seasonitem.update(art)
 				except:
