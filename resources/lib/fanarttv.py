@@ -49,7 +49,6 @@ def get(remote_id, query):
     art = requests.get(art, headers=headers).json()
 
     if query == 'movies':
-
         meta = {'poster': get_query_lang(art.get('movieposter'), language),
                 'fanart': get_query_lang(art.get('moviebackground'), ''),
                 'banner': get_query_lang(art.get('moviebanner'), language),
@@ -58,12 +57,11 @@ def get(remote_id, query):
     elif query == 'season':
         meta = {'poster': get_query_lang(art.get('seasonposter'), language),
                 'fanart': get_query_lang(art.get('showbackground'), ''),
-                'banner': get_query_lang(art.get('tvbanner'), language),
+                'banner': get_query_lang(art.get('seasonbanner'), language),
                 'clearart': get_query_lang(art.get('clearart', []) + art.get('hdclearart', []), language),
                 'clearlogo': get_query_lang(art.get('hdtvlogo', []) + art.get('clearlogo', []), language),
                 'landscape': get_query_lang(art.get('tvthumb'), language)}
     else:
-
         meta = {'poster': get_query_lang(art.get('tvposter'), language),
                 'fanart': get_query_lang(art.get('showbackground'), ''),
                 'banner': get_query_lang(art.get('tvbanner'), language),
