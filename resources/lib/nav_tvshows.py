@@ -630,7 +630,7 @@ def list_seasons_tvdb(id, flatten):
 				}
 			if enablefanart:
 				try:
-					art = get_fanarttv_art(show_info['tvdb_id'])
+					art = get_fanarttv_art(show_info['tvdb_id'], query='seaason')
 					art = checkart(art)
 					seasonitem.update(art)
 				except:
@@ -649,8 +649,8 @@ def checkart(item):
 			art.update({key: val})
 	return art
 
-def get_fanarttv_art(id):
-	return fanarttv.get(id, 'tv')
+def get_fanarttv_art(id, query='tv'):
+	return fanarttv.get(id, query)
 
 @plugin.cached(TTL=60)
 def list_episodes_tvdb(id, season_num):

@@ -54,7 +54,13 @@ def get(remote_id, query):
                 'banner': get_query_lang(art.get('moviebanner'), language),
                 'clearlogo': get_query_lang(art.get('movielogo', []) + art.get('hdmovielogo', []), language),
                 'landscape': get_query_lang(art.get('moviethumb'), language)}
-
+    elif query == 'season':
+        meta = {'poster': get_query_lang(art.get('seasonposter'), language),
+                'fanart': get_query_lang(art.get('showbackground'), ''),
+                'banner': get_query_lang(art.get('tvbanner'), language),
+                'clearart': get_query_lang(art.get('clearart', []) + art.get('hdclearart', []), language),
+                'clearlogo': get_query_lang(art.get('hdtvlogo', []) + art.get('clearlogo', []), language),
+                'landscape': get_query_lang(art.get('tvthumb'), language)}
     else:
 
         meta = {'poster': get_query_lang(art.get('tvposter'), language),
