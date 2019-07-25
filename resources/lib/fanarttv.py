@@ -40,6 +40,7 @@ def get_query(art):
 
     return result
 
+@plugin.cached(TTL=60*24*7, cache='Fanart')
 def get(remote_id, query):
 
     art = base_url % (query, remote_id)
