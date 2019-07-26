@@ -8,20 +8,42 @@ base_url = "http://webservice.fanart.tv/v3/%s/%s"
 api_key = "ac3aa6a86ba7518c9e0e198af71a3017"
 language = xbmc.getLanguage(xbmc.ISO_639_1)
 
-def get_query_lang(art, lang, season_num='all'):
-    if art is None: return ''
+def get_query_lang(art, lang, season_num=False):
+    if art is None:
+        return ''
     if not any(i['lang'] == lang for i in art):
         lang = 'en'
-    try:
+    try: 
+        temp = []
+        
+        if season_num:
+            for i in art:
+                if 'season' in i:
+                    if i['season'] == 'all':
+                        temp.append(i)
+                    elif int(i['season']) == int(season_num):
+                        temp.append(i)
+                else:
+                    temp.append(i)
+        else:
+            for i in art:
+                if 'season' in i:
+                    if i['season'] == 'all':
+                        temp.append(i)
+                else:
+                    temp.append(i)
+        
+        art = temp
+    
         result = [(x['url'], x['likes']) for x in art if x.get('lang') == lang]
         result = [(x[0], x[1]) for x in result]
         result = sorted(result, key=lambda x: int(x[1]), reverse=True)
         result = [x[0] for x in result][0]
         result = result
-
     except:
         result = ''
-    if not 'http' in result: result = ''
+    if not 'http' in result:
+        result = ''
 
     return result
 
@@ -54,7 +76,7 @@ def get(remote_id, query, season):
     headers = {'client-key': client_key, 'api-key': api_key}
 
     art = requests.get(art, headers=headers).json()
-
+    
     if type == 'movies':
         meta = {'poster': get_query_lang(art.get('movieposter'), language),
                 'fanart': get_query_lang(art.get('moviebackground'), language),
@@ -62,9 +84,6 @@ def get(remote_id, query, season):
                 'clearlogo': get_query_lang(art.get('movielogo', []) + art.get('hdmovielogo', []), language),
                 'landscape': get_query_lang(art.get('moviethumb'), language)}
     elif type in ['season', 'episode']:
-        import web_pdb
-        web_pdb.set_trace()
-    
         meta = {'poster': get_query_lang(art.get('seasonposter'), language, season_num=season),
                 'fanart': get_query_lang(art.get('showbackground'), language, season_num=season),
                 'banner': get_query_lang(art.get('seasonbanner'), language, season_num=season),

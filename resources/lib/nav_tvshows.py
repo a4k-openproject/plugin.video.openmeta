@@ -649,7 +649,7 @@ def checkart(item):
 			art.update({key: val})
 	return art
 
-def get_fanarttv_art(id, query='tv', season='all'):
+def get_fanarttv_art(id, query='tv', season=False):
 	return fanarttv.get(id, query, season)
 
 @plugin.cached(TTL=60)
