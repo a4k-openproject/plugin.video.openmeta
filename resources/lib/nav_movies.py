@@ -447,7 +447,14 @@ def movies_play_choose_player(src, id, usedefault):
 
 @plugin.route('/movies/play/<src>/<id>')
 def movies_play(src, id, usedefault='True'):
-	movies_play_choose_player(src, id, usedefault)
+	playaction = plugin.get_setting('movies_default_action', int)
+	if playaction == 1 and xbmc.getCondVisibility('system.hasaddon(script.extendedinfo)') and not plugin.getProperty('infodialogs.active'):
+		from resources.lib.play_base import action_cancel
+		action_cancel()
+		src = 'id' if src == 'tmdb' else 'imdb_id'
+		xbmc.executebuiltin('RunScript(script.extendedinfo,info=extendedinfo,%s=%s)' % (src, id))
+	else:
+		movies_play_choose_player(src, id, usedefault)
 
 @plugin.route('/movies/play_by_name/<name>/<lang>')
 def movies_play_by_name(name, lang='en', usedefault='True'):
@@ -494,12 +501,12 @@ def make_movie_item(movie_info):
 		except:
 			tmdb_id = False
 	try:
-		imdb_id = movie_info.get('imdb')
+		imdb_id = movie_info.get('imdbnumber')
 	except:
 		imdb_id = ''
 	if imdb_id == '':
 		try:
-			imdb_id = info['imdb']
+			imdb_id = info['imdb_id']
 		except:
 			imdb_id = False
 	if tmdb_id:

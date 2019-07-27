@@ -215,7 +215,17 @@ def tv_play_choose_player(id, season, episode, usedefault):
 
 @plugin.route('/tv/play/<id>/<season>/<episode>')
 def tv_play(id, season, episode, usedefault='True'):
-	play_tvshows.play_episode(id, season, episode, usedefault)
+	playaction = plugin.get_setting('tvshows_default_action', int)
+	if playaction == 1 and xbmc.getCondVisibility('system.hasaddon(script.extendedinfo)') and not plugin.getProperty('infodialogs.active'):
+		from resources.lib.play_base import action_cancel
+		action_cancel()
+		xbmc.executebuiltin('RunScript(script.extendedinfo,info=extendedtvinfo,tvdb_id=%s)' % (id))
+	elif playaction == 2 and xbmc.getCondVisibility('system.hasaddon(script.extendedinfo)') and not plugin.getProperty('infodialogs.active'):
+		from resources.lib.play_base import action_cancel
+		action_cancel()
+		xbmc.executebuiltin('RunScript(script.extendedinfo,info=extendedepisodeinfo,tvdb_id=%s,season=%s,episode=%s)' % (id, season, episode))
+	else:
+		play_tvshows.play_episode(id, season, episode, usedefault)
 
 @plugin.route('/tv/play_by_name/<name>/<season>/<episode>/<lang>', options={'lang': 'en'})
 def tv_play_by_name(name, season, episode, lang, usedefault='True'):
