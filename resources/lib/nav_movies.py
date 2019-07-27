@@ -558,8 +558,8 @@ def checkart(item):
 			art.update({key: val})
 	return art
 
-def get_fanarttv_art(id):
-	return fanarttv.get(id, 'movies')
+def get_fanarttv_art(id, query='movies', season=False):
+	return fanarttv.get(id, query, season)
 
 @plugin.route('/my_trakt/movie_lists/movies/recommendations')
 def trakt_movies_recommendations(raw=False):
