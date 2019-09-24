@@ -746,7 +746,9 @@ def trakt_tv_next_episodes(raw=False):
 	for episode in result:
 		trakt_id = episode['show']['ids']['trakt']
 		episode_info = Trakt.get_episode(trakt_id, episode['season'], episode['number'])
-		first_aired_string = episode_info['first_aired']
+		first_aired_string = episode_info.get('first_aired', '')
+		if not first_aired_string:
+			continue
 		episode['first_aired'] = first_aired_string
 		if int(first_aired_string[:4]) < 1970:
 			items.append(episode)
