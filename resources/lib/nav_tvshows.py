@@ -454,8 +454,8 @@ def list_trakt_episodes(result):
 				'info_type': 'video',
 				'stream_info': {'video': {}},
 				'properties': properties,
-				# 'thumbnail': extradata['thumbnail'],
-				# 'poster': extradata['poster'],
+				'thumbnail': episode_info['fanart'],
+				'poster': episode_info['poster'],
 				'fanart': episode_info['fanart']
 			}
 
