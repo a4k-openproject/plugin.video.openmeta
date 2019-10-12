@@ -3,6 +3,7 @@
 	<category label="General">
 		<setting label="Setup" type="lsep"/>
 		<setting label="Players URL" id="players_update_url" type="text" default="http://bit.ly/openplayers"/>
+		<setting label="Language" type="select" values="bg|cs|da|de|el|en|es|fi|fr|he|hr|hu|it|ja|ko|nl|no|pl|pt|ru|sl|sv|tr|zh" id="LanguageID" default="en"/>
 		<setting label="Install or update players from URL..." type="action" subsetting="true" option="close" enable="!eq(-1,)" action="RunPlugin(plugin://plugin.video.openmeta/update_players)"/>
 		<setting label="Total setup..." option="close" type="action" action="RunPlugin(plugin://plugin.video.openmeta/setup/total)"/>
         <setting label="Movies Default Play Action" type="enum" id="movies_default_action" values="Play|OpenInfo" default="0"/>

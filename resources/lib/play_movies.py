@@ -21,7 +21,7 @@ def play_movie(tmdb_id, usedefault):
 		for player in players:
 			if player.title == default:
 			 	players = [player]
-	movie = Movies(tmdb_id).info(language='en', append_to_response='external_ids,alternative_titles,credits,images,keywords,releases,translations,rating')
+	movie = Movies(tmdb_id).info(language=plugin.get_setting('LanguageID', str), append_to_response='external_ids,alternative_titles,credits,images,keywords,releases,translations,rating')
 	movie_info = meta_info.get_movie_metadata(movie)
 	imdb_id = movie['imdb_id'] if 'imdb_id' in movie else None
 	id_type = 'imdb' if imdb_id and imdb_id.startswith('tt') else 'tmdb'
@@ -40,7 +40,7 @@ def play_movie(tmdb_id, usedefault):
 		params[lang] = text.to_unicode(params[lang])
 	link = play_base.on_play_video(players, params, trakt_ids)
 	if link:
-		movie = Movies(tmdb_id).info(language='en')
+		movie = Movies(tmdb_id).info(language=plugin.get_setting('LanguageID', str))
 		play_base.action_play(
 			{
 				'label': movie_info['title'],

@@ -1,5 +1,6 @@
 import re, copy
 from resources.lib import text
+from resources.lib.xswift2 import plugin
 
 def make_trailer(trailer_url):
 	match = re.search('\?v=(.*)', trailer_url)
@@ -123,7 +124,7 @@ def get_tvshow_metadata_tvdb(tvdb_show, banners=True):
 	info['originaltitle'] = tvdb_show['seriesname']
 	info['plot'] = tvdb_show.get('overview', '')
 	if banners:
-		info['poster'] = tvdb_show.get_poster(language='en')
+		info['poster'] = tvdb_show.get_poster(language=plugin.get_setting('LanguageID', str))
 	info['fanart'] = tvdb_show.get('fanart', '')
 	info['rating'] = tvdb_show.get('rating')
 	info['votes'] = tvdb_show.get('ratingcount')
@@ -186,7 +187,7 @@ def get_season_metadata_tvdb(show_metadata, season, banners=True):
 	del info['title']
 	info['season'] = season.num
 	if banners:
-		info['poster'] = season.get_poster(language='en')
+		info['poster'] = season.get_poster(language=plugin.get_setting('LanguageID', str))
 	return info
 
 def get_season_metadata_tmdb(show_metadata, season):

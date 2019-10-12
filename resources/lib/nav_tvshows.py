@@ -111,7 +111,7 @@ def trakt_tv_trending(page, raw=False):
 
 @plugin.route('/tv/tvdb_search_term/<term>/<page>/')
 def tvdb_tv_search_term(term, page):
-	search_results = TVDB.search(term, language='en')
+	search_results = TVDB.search(term, language=plugin.get_setting('LanguageID', str))
 	items = []
 	load_full_tvshow = lambda tvshow : TVDB.get_show(tvshow['id'], full=True)
 	for tvdb_show in executor.execute(load_full_tvshow, search_results, workers=10):
@@ -157,7 +157,7 @@ def tmdb_tv_genres():
 @plugin.cached_route('/tv/genre/<id>/<page>/', TTL=60)
 def tmdb_tv_genre(id, page, raw=False):
 	from resources.lib.TheMovieDB import Discover
-	result = Discover().tv(with_genres=id, page=page, language='en')
+	result = Discover().tv(with_genres=id, page=page, language=plugin.get_setting('LanguageID', str))
 	if raw:
 		return result
 	else:
@@ -166,7 +166,7 @@ def tmdb_tv_genre(id, page, raw=False):
 @plugin.cached_route('/tv/tmdb_now_playing/<page>/', TTL=60)
 def tmdb_tv_on_the_air(page, raw=False):
 	from resources.lib.TheMovieDB import TV
-	result = TV().on_the_air(page=page, language='en')
+	result = TV().on_the_air(page=page, language=plugin.get_setting('LanguageID', str))
 	if raw:
 		return result
 	else:
@@ -175,7 +175,7 @@ def tmdb_tv_on_the_air(page, raw=False):
 @plugin.cached_route('/tv/tmdb_most_popular/<page>/', TTL=60)
 def tmdb_tv_most_popular(page, raw=False):
 	from resources.lib.TheMovieDB import TV
-	result = TV().popular(page=page, language='en')
+	result = TV().popular(page=page, language=plugin.get_setting('LanguageID', str))
 	if raw:
 		return result
 	else:

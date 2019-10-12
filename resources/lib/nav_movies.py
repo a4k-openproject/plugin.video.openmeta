@@ -35,7 +35,7 @@ SORTRAKT = [
 @plugin.route('/movies/tmdb/blockbusters/<page>/')
 def tmdb_movies_blockbusters(page, raw=False):
 	from resources.lib.TheMovieDB import Discover
-	result = Discover().movie(language='en', append_to_response='external_ids,videos', **{'page': page, 'sort_by': 'revenue.desc'})
+	result = Discover().movie(language=plugin.get_setting('LanguageID', str), append_to_response='external_ids,videos', **{'page': page, 'sort_by': 'revenue.desc'})
 	if raw:
 		return result
 	else:
@@ -52,7 +52,7 @@ def tmdb_movies_play_random_blockbuster():
 @plugin.route('/movies/tmdb/now_playing/<page>/')
 def tmdb_movies_now_playing(page, raw=False):
 	from resources.lib.TheMovieDB import Movies
-	result = Movies().now_playing(language='en', page=page, append_to_response='external_ids,videos')
+	result = Movies().now_playing(language=plugin.get_setting('LanguageID', str), page=page, append_to_response='external_ids,videos')
 	if raw:
 		return result
 	else:
@@ -70,7 +70,7 @@ def tmdb_movies_play_random_now_playing():
 @plugin.route('/movies/tmdb/popular/<page>/')
 def tmdb_movies_popular(page, raw=False):
 	from resources.lib.TheMovieDB import Movies
-	result = Movies().popular(language='en', page=page)
+	result = Movies().popular(language=plugin.get_setting('LanguageID', str), page=page)
 	if raw:
 		return result
 	else:
@@ -88,7 +88,7 @@ def tmdb_movies_play_random_popular():
 @plugin.route('/movies/tmdb/top_rated/<page>/')
 def tmdb_movies_top_rated(page, raw=False):
 	from resources.lib.TheMovieDB import Movies
-	result = Movies().top_rated(language='en', page=page, append_to_response='external_ids,videos')
+	result = Movies().top_rated(language=plugin.get_setting('LanguageID', str), page=page, append_to_response='external_ids,videos')
 	if raw:
 		return result
 	else:
@@ -205,7 +205,7 @@ def trakt_movies_play_random_trending():
 @plugin.route('/movies/tmdb/search_term/<term>/<page>/')
 def tmdb_movies_search_term(term, page):
 	from resources.lib.TheMovieDB import Search
-	result = Search().movie(query=term, language='en', page=page, append_to_response='external_ids,videos')
+	result = Search().movie(query=term, language=plugin.get_setting('LanguageID', str), page=page, append_to_response='external_ids,videos')
 	return list_tmdb_items(result)
 
 @plugin.route('/movies/trakt/person/<person_id>')
@@ -233,7 +233,7 @@ def tmdb_movies_genres():
 @plugin.route('/movies/genre/<id>/<page>/')
 def tmdb_movies_genre(id, page, raw=False):
 	from resources.lib.TheMovieDB import Genres
-	result = Genres(id).movies(id=id, language='en', page=page)
+	result = Genres(id).movies(id=id, language=plugin.get_setting('LanguageID', str), page=page)
 	if raw:
 		return result
 	else:

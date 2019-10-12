@@ -135,7 +135,7 @@ class Tvdb:
 		except:
 			pass
 
-	def search(self, series, year=None, language='en'):
+	def search(self, series, year=None, language=plugin.get_setting('LanguageID', str)):
 		series = urllib.quote(to_bytes(series))
 		result = self._loadUrl(self.config['url_search'] % (series, language))
 		seriesEt = self._parseXML(result)
