@@ -1,3 +1,4 @@
+# vi: set noet ff=dos :
 import xbmcplugin
 from resources.lib import text
 from resources.lib import Trakt
@@ -7,11 +8,11 @@ from resources.lib import nav_movies
 from resources.lib import nav_tvshows
 from resources.lib.xswift2 import plugin
 
-
 SORT = [
 	xbmcplugin.SORT_METHOD_UNSORTED,
 	xbmcplugin.SORT_METHOD_LABEL,
-	xbmcplugin.SORT_METHOD_VIDEO_YEAR]
+	xbmcplugin.SORT_METHOD_VIDEO_YEAR,
+	xbmcplugin.SORT_METHOD_DATEADDED]
 
 
 @plugin.route('/my_trakt/lists/trakt_my_lists')
@@ -214,8 +215,10 @@ def _lists_trakt_show_list(list_items):
 					'poster': person_image,
 					'properties': {'fanart_image': person_image}
 				})
+		# Convert '2014-06-17T06:52:03.000Z' to '2014-06-17 06:52:03' format
+		item['info']['dateadded'] = ' '.join(list_item['listed_at'].split('.')[0].split('T'))
 		if item is not None:
 			items.append(item)
 	for item in items:
 		item['properties'] = {'fanart_image': plugin.get_addon_fanart()}
-	return items
+	return plugin.finish(items=items, sort_methods=SORT)
