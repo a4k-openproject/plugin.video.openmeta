@@ -1,3 +1,4 @@
+# vi: set noet ff=dos :
 import os, io, time, urllib, zipfile, requests_cache
 from xml.etree import ElementTree
 from resources.lib import text
@@ -184,7 +185,13 @@ class Tvdb:
 		if full:
 			url = self.url_sid_full(sid, language)
 			response = self._loadZip(url)
-			fullDataEt = self._parseXML(response['%s.xml' % language])
+			for fname in ('%s.xml', '%s.zip.xml'):
+				xml_fname = fname % language
+				if xml_fname in response:
+					break
+			else:
+				raise KeyError("Show XML not found in zip from API")
+			fullDataEt = self._parseXML(response[xml_fname])
 			self._parseSeriesData(sid, fullDataEt)
 			self._parseEpisodesData(sid, fullDataEt)
 			bannersEt = self._parseXML(response['banners.xml'])
