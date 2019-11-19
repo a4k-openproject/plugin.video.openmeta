@@ -151,7 +151,8 @@ class Tvdb:
 		seriesEt = self._parseXML(result)
 		allSeries = []
 		for series in seriesEt:
-			result = dict((k.tag.lower(), k.text) for k in series.getchildren())
+			result = {elem.tag.lower(): elem.text
+						for elem in series.getchildren() if elem.text}
 			result['id'] = int(result['id'])
 			if 'aliasnames' in result:
 				result['aliasnames'] = result['aliasnames'].split('|')
@@ -274,7 +275,7 @@ class Tvdb:
 						value = self.config['url_artwork_prefix'] % (value)
 					else:
 						value = self._cleanData(value)
-				self._setItem(sid, seas_no, ep_no, tag, value)
+					self._setItem(sid, seas_no, ep_no, tag, value)
 
 	def _parseSeriesData(self, sid, et):
 		for curInfo in et.findall('Series')[0]:
@@ -285,12 +286,12 @@ class Tvdb:
 					value = self.config['url_artwork_prefix'] % (value)
 				else:
 					value = self._cleanData(value)
-			self._setShowData(sid, tag, value)
-			if tag == 'firstaired':
-				try:
-					self._setShowData(sid, 'year', int(value.split('-')[0].strip()))
-				except:
-					pass
+				self._setShowData(sid, tag, value)
+				if tag == 'firstaired':
+					try:
+						self._setShowData(sid, 'year', int(value.split('-')[0].strip()))
+					except:
+						pass
 
 	def _parseBanners(self, sid, bannersEt):
 		banners = {}
