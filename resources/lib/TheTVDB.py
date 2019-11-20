@@ -40,7 +40,7 @@ class Show(dict):
 		if key in self.data:
 			return dict.__getitem__(self.data, key)
 			message = '%s not found' % key
-		raise Exception('%s not found'  % key)
+		raise KeyError('%s not found'  % key)
 
 	def get_poster(self, language=None, default=None):
 		try:
