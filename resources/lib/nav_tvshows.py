@@ -368,7 +368,7 @@ def list_tvshows(response):
 			try:
 				info = build_tvshow_info(tvdb_show, tmdb_show)
 			except Exception as e:
-				xbmc.log('Failed to parse show, tvdbID: {}'.format(tvdb_show), xbmc.LOGERROR)
+				xbmc.log('Failed to parse show, tvdbID: {}'.format(tvdb_show.get('id')), xbmc.LOGERROR)
 				xbmc.log('Error: {}'.format(e), xbmc.LOGERROR)
 				continue
 			else:
