@@ -88,7 +88,7 @@ def tmdb_play_episode(id, season, episode):
 		dbid = int(dbid)
 	except:
 		dbid = None
-	show = TV(id).info(language='en', append_to_response='external_ids,images')
+	show = TV(id).info(language=plugin.get_setting('LanguageID', str), append_to_response='external_ids,images')
 	if 'first_air_date' in show and show['first_air_date'] != None:
 		year = show['first_air_date'][:4]
 	else:
@@ -102,11 +102,11 @@ def tmdb_play_episode(id, season, episode):
 		title = None
 	show_info = meta_info.get_tvshow_metadata_tmdb(show)
 	title = show_info['name']
-	preason = TV_Seasons(id, season).info(language='en', append_to_response='external_ids,images')
+	preason = TV_Seasons(id, season).info(language=plugin.get_setting('LanguageID', str), append_to_response='external_ids,images')
 	if 'The resource you requested could not be found' in str(preason):
 		return trakt_play_episode(trakt_ids['trakt'], season, episode)
 	season_info = meta_info.get_season_metadata_tmdb(show_info, preason)
-	prepisode = TV_Episodes(id, season, episode).info(language='en', append_to_response='external_ids,images')
+	prepisode = TV_Episodes(id, season, episode).info(language=plugin.get_setting('LanguageID', str), append_to_response='external_ids,images')
 	if prepisode == '{u"status_code": 34, u"status_message": u"The resource you requested could not be found."}':
 		return trakt_play_episode(trakt_ids['tmdb'], season, episode)
 	episode_info = meta_info.get_episode_metadata_tmdb(season_info, prepisode)

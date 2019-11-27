@@ -215,7 +215,7 @@ def get_base_genres():
 @plugin.cached(TTL=None, cache='genres')
 def tmdb_movie_genres():
 	from resources.lib.TheMovieDB import Genres
-	result = Genres().movie_list(language='en')
+	result = Genres().movie_list(language=plugin.get_setting('LanguageID', str))
 	genres= dict([(i['id'], i['name']) for i in result['genres'] if i['name'] is not None])
 	if genres:
 		return genres
@@ -224,7 +224,7 @@ def tmdb_movie_genres():
 @plugin.cached(TTL=None, cache='genres')
 def tmdb_tv_genres():
 	from resources.lib.TheMovieDB import Genres
-	result = Genres().tv_list(language='en')
+	result = Genres().tv_list(language=plugin.get_setting('LanguageID', str))
 	genres= dict([(i['id'], i['name']) for i in result['genres'] if i['name'] is not None])
 	if genres:
 		return genres
