@@ -272,6 +272,10 @@ def get_latest_releases_movies():
 	return call_trakt('users/giladg/lists/latest-releases/items?extended=full', with_auth=False)
 
 @plugin.cached(TTL=60, cache='Trakt')
+def get_new_shows():
+	return call_trakt('users/garycrawfordgc/lists/new-shows/items/show?extended=full', with_auth=False)
+
+@plugin.cached(TTL=60, cache='Trakt')
 def get_imdb_top_rated_movies(page):
 	result, pages = call_trakt('users/justin/lists/imdb-top-rated-movies/items?extended=full&limit=%s' % limit, pagination=True, page=page, with_auth=False)
 	return result, pages

@@ -142,6 +142,19 @@ def trakt_tv_search_term(term, page):
 	results, pages = Trakt.search_for_tvshow_paginated(term, page)
 	return list_trakt_search_items(results, pages, page)
 
+@plugin.route('/tv/trakt/new_shows')
+def trakt_tv_new_shows(raw=False):
+	results = sorted(Trakt.get_new_shows(), key=lambda k: k['listed_at'], reverse=True)
+	if raw:
+		return results
+	else:
+		return list_trakt_tvshows(results, '1', '1')
+
+@plugin.route('/tv/trakt/random_new_shows')
+def trakt_tv_play_random_new_shows():
+	results = trakt_tv_new_shows(raw=True)
+	trakt_tv_play_random(results)
+
 @plugin.cached_route('/tv_genres', TTL=60)
 def tmdb_tv_genres():
 	genres = nav_base.get_tv_genres()

@@ -175,6 +175,14 @@ def tv():
 		'fanart': plugin.get_addon_fanart()
 	},
 	{
+		'label': 'New Shows (Trakt)',
+		'path': plugin.url_for('trakt_tv_new_shows'),
+		'thumbnail': plugin.get_media_icon('traktcalendar'),
+		'fanart': plugin.get_addon_fanart(),
+		'context_menu': [
+			('Play (random)', 'RunPlugin(%s)' % plugin.url_for('trakt_tv_play_random_new_shows'))]
+	},
+	{
 		'label': 'Genres',
 		'path': plugin.url_for('tmdb_tv_genres'),
 		'thumbnail': plugin.get_media_icon('genres'),
